@@ -1,0 +1,1658 @@
+---
+title: "Dataset Creator"
+author: "Justin Carter"
+date: "3/29/2023"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+The purpose of this script is to combine hundreds of team statistics datasets, as well as game outcome datasets, for FBS football teams in the 2022 NCAA football season.
+The result of this code will be weekly datasets of the 2022 season that will then be utilized, in a seperate file, for analysis of the season.
+
+
+```{r}
+#read in datasets and access relevant libraries. 
+
+library(tidyverse)
+library(readr)
+library(readxl)
+library(purrr)
+library(dplyr)
+
+#read in all datasets, and assign then names according to thier file names
+
+file_names <- list.files(pattern = "*.xlsx")
+
+df_names <- gsub(".xlsx", "", file_names)
+
+df_list <- map(file_names, read_xlsx)
+names(df_list) <- df_names
+
+for (i in seq_along(df_list)){
+  assign(df_names[i], df_list[[i]])
+  
+}
+
+
+#Datasets that do not contain observations for each team:
+# Blocked Kicks ===
+# Blocked Punts === 
+# Defensive TDs ===
+# Fewest Penalties Per Game |||
+# Fewest Penalty Yards Per Game |||
+# Fumbles Recovered ===
+# Kickoff Returns ===
+# Net Punting |||
+# Passes Intercepted ===
+# Rushing Offense |||
+# Scoring Defense |||
+# Scoring Offense |||
+# Tackles For Loss Allowed |||
+# Team Sacks ===
+# Total Defense |||
+# Turnovers Gained ===
+
+
+
+#===================Notes about Data Sets==================================
+#There are multiple datasets that do not contain observations for all 131 FBS College Football teams, for multiple weeks.
+
+#In order to make the eventual dataset more consistent, as well as promote data quality, datasets that did not contain 131 observations for multiple weeks will be eliminated from the analysis. In addition, the first week of team statistics will be eliminated from the analysis. This is for multiple reasons. Primarily, this would allow many more datasets to be considered for the analysis. 
+
+#The datasets that will be eliminated from the analysis are as follows:
+
+# Blocked Kicks
+# Blocked Punts
+# Defensive TDs
+# Fumbles Recovered
+# Kickoff Returns
+# Passes Intercepted
+# Team Sacks
+# Turnovers Gained
+
+#It should be noted that several of these datasets contain variables that are otherwise represented in other, related datasets. 
+
+
+#Week 3 Outcomes
+Week3Outcomes = read_csv("Week3GameOutcomes.csv")
+
+#Week 4 Outcomes
+Week4Outcomes = read_csv("Week4GameOutcomes.csv")
+
+#Week 5 Outcomes
+Week5Outcomes = read_csv("Week5GameOutcomes.csv")
+
+#Week 6 Outcomes
+Week6Outcomes = read_csv("Week6GameOutcomes.csv")
+
+#Week 7 Outcomes
+Week7Outcomes = read_csv("Week7GameOutcomes.csv")
+
+#Week 8 Outcomes
+Week8Outcomes = read_csv("Week8GameOutcomes.csv")
+
+#Week 9 Outcomes
+Week9Outcomes = read_csv("Week9GameOutcomes.csv")
+
+#Week 10 Outcomes
+Week10Outcomes = read_csv("Week10GameOutcomes.csv")
+
+#Week 11 Outcomes
+Week11Outcomes = read_csv("Week11GameOutcomes.csv")
+
+#Week 12 Outcomes
+Week12Outcomes = read_csv("Week12GameOutcomes.csv")
+
+#Week 13 Outcomes
+Week13Outcomes = read_csv("Week13GameOutcomes.csv")
+
+#Week 14 Outcomes
+Week14Outcomes = read_csv("Week14GameOutcomes.csv")
+
+
+
+#=====================================================
+#Bowl Season Outcomes (will be combined with Week14 team stats, except for the national championship)
+
+#Week 15 Outcomes
+Week15Outcomes = read_csv("Week15GameOutcomes.csv") #Navy-Army game
+
+#Week 17 Outcomes
+Week17Outcomes = read_csv("Week17GameOutcomes.csv")
+#first week of bowls; no games on week 16
+
+#Week 18 Outcomes
+Week18Outcomes = read_csv("Week18GameOutcomes.csv")
+#second week of bowls, includes the playoff games
+
+#Week 19 Outcomes
+Week19Outcomes = read_csv("Week19GameOutcomes.csv")
+#national championship game outcome
+
+
+```
+
+
+```{r}
+#put game stats in data frames by week
+
+#list of data frames is called df_list
+
+
+#assign dataframes in the list of dataframes the prefix of the dataset name
+#to each variable within thier respective dataset
+for (i in 1:length(df_list)) {
+  prefix <- sub("^[^_]*_", "", names(df_list)[i])
+  names(df_list[[i]])[names(df_list[[i]]) != "Team"] <- paste0(prefix, "_", names(df_list[[i]])[names(df_list[[i]]) != "Team"])
+}
+
+
+#to get rid of datasets that are not needed for analysis; these contain variables with not enough support for analysis
+fives <- seq(5, 752, by=47)
+sevens <- seq(7,752, by=47)
+tens <- seq(10,752, by=47)
+eighteens <- seq(18,752, by=47)
+twentys <- seq(20,752,by=47) 
+twentythrees <- seq(23, 752, by=47)
+thirtynines <- seq(39, 752, by=47)
+fortyfives <- seq(45, 752, by=47)
+
+new_df_list <- df_list[-c(fives, sevens, tens, eighteens, twentys, twentythrees, thirtynines, fortyfives)]
+
+
+# =========Join Second Week's Stats into a single dataset=================
+w2_stats <- Reduce(function(x, y) merge(x, y, by = "Team", all = FALSE), new_df_list[313:351])
+
+#w2_stats <- w2_stats[!duplicated(as.list(w2_stats))]
+
+
+# =========Join Third Week's Stats into a single dataset=================
+w3_stats <- Reduce(function(x, y) merge(x, y, by = "Team", all = FALSE), new_df_list[352:390])
+
+#w3_stats <- w3_stats[!duplicated(as.list(w3_stats))]
+
+# =========Join Fourth Week's Stats into a single dataset=================
+w4_stats <- Reduce(function(x, y) merge(x, y, by = "Team", all = FALSE), new_df_list[391:429])
+
+#w4_stats <- w4_stats[!duplicated(as.list(w4_stats))]
+
+# =========Join Fifth Week's Stats into a single dataset=================
+w5_stats <- Reduce(function(x, y) merge(x, y, by = "Team", all = FALSE), new_df_list[430:468])
+
+#w5_stats <- w5_stats[!duplicated(as.list(w5_stats))]
+
+# =========Join Sixth Week's Stats into a single dataset=================
+w6_stats <- Reduce(function(x, y) merge(x, y, by = "Team", all = FALSE), new_df_list[469:507])
+
+#w6_stats <- w6_stats[!duplicated(as.list(w6_stats))]
+
+# =========Join Seventh Week's Stats into a single dataset=================
+w7_stats <- Reduce(function(x, y) merge(x, y, by = "Team", all = FALSE), new_df_list[508:546])
+
+#w7_stats <- w7_stats[!duplicated(as.list(w7_stats))]
+
+# =========Join Eighth Week's Stats into a single dataset=================
+w8_stats <- Reduce(function(x, y) merge(x, y, by = "Team", all = FALSE), new_df_list[547:585])
+
+#w8_stats <- w8_stats[!duplicated(as.list(w8_stats))]
+
+# =========Join Ninth Week's Stats into a single dataset=================
+w9_stats <- Reduce(function(x, y) merge(x, y, by = "Team", all = FALSE), new_df_list[586:624])
+
+#w9_stats <- w9_stats[!duplicated(as.list(w9_stats))]
+
+# =========Join Tenth Week's Stats into a single dataset=================
+w10_stats <- Reduce(function(x, y) merge(x, y, by = "Team", all = FALSE), new_df_list[79:117])
+
+#w10_stats <- w10_stats[!duplicated(as.list(w10_stats))]
+
+# =========Join Eleventh Week's Stats into a single dataset=================
+w11_stats <- Reduce(function(x, y) merge(x, y, by = "Team", all = FALSE), new_df_list[118:156])
+
+#w11_stats <- w11_stats[!duplicated(as.list(w11_stats))]
+
+# =========Join Twelfth Week's Stats into a single dataset=================
+w12_stats <- Reduce(function(x, y) merge(x, y, by = "Team", all = FALSE), new_df_list[157:195])
+
+#w12_stats <- w12_stats[!duplicated(as.list(w12_stats))]
+
+# =========Join Thirteenth Week's Stats into a single dataset=================
+w13_stats <- Reduce(function(x, y) merge(x, y, by = "Team", all = FALSE), new_df_list[196:234])
+
+#w13_stats <- w13_stats[!duplicated(as.list(w13_stats))]
+
+# =========Join Fourteenth Week's Stats into a single dataset=================
+w14_stats <- Reduce(function(x, y) merge(x, y, by = "Team", all = FALSE), new_df_list[235:273])
+
+#w14_stats <- w14_stats[!duplicated(as.list(w14_stats))]
+
+# =========Join Fifteenth Week's Stats into a single dataset=================
+w15_stats <- Reduce(function(x, y) merge(x, y, by = "Team", all = FALSE), new_df_list[274:312])
+
+#w15_stats <- w15_stats[!duplicated(as.list(w15_stats))]
+
+# =========Join Sixteenth Week's Stats into a single dataset=================
+b1_stats <- Reduce(function(x, y) merge(x, y, by = "Team", all = FALSE), new_df_list[1:39])
+
+#b1_stats <- b1_stats[!duplicated(as.list(b1_stats))]
+
+
+```
+
+
+```{r}
+#Modify the Outcomes Data Frames
+
+#make variable denoting 1 if HomeTeam won, and 0 otherwise
+
+Week3Outcomes = Week3Outcomes %>%
+  mutate(Winner = ifelse(Home_Team_Total_Score > Away_Team_Total_Score,1,0)) %>%
+  select(Away_Team, Home_Team, Winner)
+
+Week4Outcomes = Week4Outcomes %>%
+  mutate(Winner = ifelse(Home_Team_Total_Score > Away_Team_Total_Score,1,0)) %>%
+  select(Away_Team, Home_Team, Winner)
+
+Week5Outcomes = Week5Outcomes %>%
+  mutate(Winner = ifelse(Home_Team_Total_Score > Away_Team_Total_Score,1,0)) %>%
+  select(Away_Team, Home_Team, Winner)
+
+Week6Outcomes = Week6Outcomes %>%
+  mutate(Winner = ifelse(Home_Team_Total_Score > Away_Team_Total_Score,1,0)) %>%
+  select(Away_Team, Home_Team, Winner)
+
+Week7Outcomes = Week7Outcomes %>%
+  mutate(Winner = ifelse(Home_Team_Total_Score > Away_Team_Total_Score,1,0)) %>%
+  select(Away_Team, Home_Team, Winner)
+
+Week8Outcomes = Week8Outcomes %>%
+  mutate(Winner = ifelse(Home_Team_Total_Score > Away_Team_Total_Score,1,0)) %>%
+  select(Away_Team, Home_Team, Winner)
+
+Week9Outcomes = Week9Outcomes %>%
+  mutate(Winner = ifelse(Home_Team_Total_Score > Away_Team_Total_Score,1,0)) %>%
+  select(Away_Team, Home_Team, Winner)
+
+Week10Outcomes = Week10Outcomes %>%
+  mutate(Winner = ifelse(Home_Team_Total_Score > Away_Team_Total_Score,1,0)) %>%
+  select(Away_Team, Home_Team, Winner)
+
+Week11Outcomes = Week11Outcomes %>%
+  mutate(Winner = ifelse(Home_Team_Total_Score > Away_Team_Total_Score,1,0)) %>%
+  select(Away_Team, Home_Team, Winner)
+
+Week12Outcomes = Week12Outcomes %>%
+  mutate(Winner = ifelse(Home_Team_Total_Score > Away_Team_Total_Score,1,0)) %>%
+  select(Away_Team, Home_Team, Winner)
+
+Week13Outcomes = Week13Outcomes %>%
+  mutate(Winner = ifelse(Home_Team_Total_Score > Away_Team_Total_Score,1,0)) %>%
+  select(Away_Team, Home_Team, Winner)
+
+Week14Outcomes = Week14Outcomes %>%
+  mutate(Winner = ifelse(Home_Team_Total_Score > Away_Team_Total_Score,1,0)) %>%
+  select(Away_Team, Home_Team, Winner)
+
+Week15Outcomes = Week15Outcomes %>%
+  mutate(Winner = ifelse(Home_Team_Total_Score > Away_Team_Total_Score,1,0)) %>%
+  select(Away_Team, Home_Team, Winner)
+
+Week17Outcomes = Week17Outcomes %>%
+  mutate(Winner = ifelse(Home_Team_Total_Score > Away_Team_Total_Score,1,0)) %>%
+  select(Away_Team, Home_Team, Winner)
+
+Week18Outcomes = Week18Outcomes %>%
+  mutate(Winner = ifelse(Home_Team_Total_Score > Away_Team_Total_Score,1,0)) %>%
+  select(Away_Team, Home_Team, Winner)
+
+Week19Outcomes = Week19Outcomes %>%
+  mutate(Winner = ifelse(Home_Team_Total_Score > Away_Team_Total_Score,1,0)) %>%
+  select(Away_Team, Home_Team, Winner)
+```
+
+
+
+Rename all teams in Week2 Team Stats Df:
+```{r}
+#Because the Team names of the outcomes and team stats are slightly different, team names must be changed in order to merge later
+
+#reorder Team Stats and Outcomes for Week 2 Alphabetically by Team:
+
+w2_stats <- w2_stats[order(w2_stats$Team),]
+
+Week3Outcomes <- Week3Outcomes[order(Week3Outcomes$Away_Team),]
+
+
+w2_Team_Names =  c("Air Force",
+                        "Akron",
+                        "Alabama",
+                        "App. St.",
+                        "Arizona",
+                        "Arizona St.",
+                        "Arkansas",
+                        "Arkansas St.",
+                        "Army",
+                        "Auburn",
+                        
+                        
+                        "Ball St.",
+                        "Baylor",
+                        "Boise St.",
+                        "Boston College",
+                        "Bowling Green",
+                        "Buffalo",
+                        "BYU",
+                        "California",
+                        "C. Michigan",
+                        "Charlotte",
+                        
+                        
+                        
+                        
+                        "Cincinnati",
+                        "Clemson",
+                        "C. Carolina",
+                        "Colorado",
+                        "Colorado St.",
+                        "Duke",
+                        "East Carolina",
+                        "E. Michigan",
+                        "FIU",
+                        "FAU",
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        "Florida",
+                        "Florida State",
+                        "Fresno St.",
+                        "Ga. Southern",
+                        "Georgia",
+                        "Georgia St.",
+                        "Georgia Tech",
+                        "Hawaii",
+                        "Houston",
+                        "Illinois",
+                        
+                        
+                        
+                        
+                        "Indiana",
+                        "Iowa",
+                        "Iowa St.",
+                        "James Madison",
+                        "Kansas",
+                        "Kansas State",
+                        "Kent St.",
+                        "Kentucky",
+                        "Liberty",
+                        "Louisiana",
+                 
+                 
+                        "Louisiana Tech",
+                        
+                        
+                        
+                        
+                        "Louisville",
+                        "LSU",
+                        "Marshall",
+                        "Maryland",
+                        "UMass",
+                        "Memphis",
+                        "Miami (Fla.)",
+                        "Miami-OH",
+                        "Michigan",
+                        "Michigan St.",
+                        
+                        
+                        
+                        
+                        
+                        "Middle Tenn.",
+                        "Minnesota",
+                        "Miss. State",
+                        "Missouri",
+                        "Navy",
+                        "NC State",
+                        "Nebraska",
+                        "Nevada",
+                        "New Mexico",
+                        "New Mexico St.",
+                        
+                        
+                        
+                        
+                        "North Carolina",
+                        "North Texas",
+                        "N. Illinois",
+                        "Northwestern",
+                        "Notre Dame",
+                        "Ohio",
+                        "Ohio State",
+                        "Oklahoma",
+                        "Oklahoma State",
+                        "Old Dominion",
+                        
+                        
+                        
+                        
+                        "Ole Miss",
+                        "Oregon",
+                        "Oregon State",
+                        "Penn State",
+                        "Pittsburgh",
+                        "Purdue",
+                        "Rice",
+                        "Rutgers",
+                        "San Diego St.",
+                        "San Jose St.",
+                        
+                        
+                        
+                        
+                        "SMU",
+                        "South Alabama",
+                        "South Carolina",
+                        "South Florida",
+                        "USC",
+                        "So. Miss",
+                        "Stanford",
+                        "Syracuse",
+                        "TCU",
+                        "Temple",
+                        "Tennessee",
+                        
+                        
+                        
+                        
+                        
+                        
+                        "Texas",
+                        "Texas A&M",
+                        "Texas State",
+                        "Texas Tech",
+                        "Toledo",
+                        "Troy",
+                        "Tulane",
+                        "Tulsa",
+                        "UAB",
+                        "UCF",
+                        
+                        
+                        
+                        
+                        "UCLA",
+                        "UConn",
+                        "UL-Monroe",
+                        "UNLV",
+                        "Utah",
+                        "Utah St.",
+                        "UTEP",
+                        "UTSA",
+                        "Vanderbilt",
+                        "Virginia",
+                        "Virginia Tech",
+                        
+                        
+                        
+                        
+                        
+                        "Wake Forest",
+                        "Washington",
+                        "Washington St.",
+                        "West Virginia",
+                        "W. Kentucky",
+                        "W. Michigan",
+                        "Wisconsin",
+                        "Wyoming")
+
+#apply new names to team stats datasets
+
+w2_stats = cbind(w2_stats, w2_Team_Names)
+
+
+w2_stats = w2_stats %>%
+  select(-Team)
+w2_stats = rename(w2_stats,Team = w2_Team_Names)
+
+
+
+w3_stats <- w3_stats[order(w3_stats$Team),]
+w3_stats = cbind(w3_stats, w2_Team_Names)
+
+w3_stats = w3_stats %>%
+  select(-Team)
+w3_stats = rename(w3_stats,Team = w2_Team_Names)
+
+
+
+w4_stats <- w4_stats[order(w4_stats$Team),]
+w4_stats = cbind(w4_stats, w2_Team_Names)
+
+w4_stats = w4_stats %>%
+  select(-Team)
+w4_stats = rename(w4_stats,Team = w2_Team_Names)
+
+
+
+
+w5_stats <- w5_stats[order(w5_stats$Team),]
+w5_stats = cbind(w5_stats, w2_Team_Names)
+
+w5_stats = w5_stats %>%
+  select(-Team)
+w5_stats = rename(w5_stats,Team = w2_Team_Names)
+
+
+
+w6_stats <- w6_stats[order(w6_stats$Team),]
+w6_stats = cbind(w6_stats, w2_Team_Names)
+
+w6_stats = w6_stats %>%
+  select(-Team)
+w6_stats = rename(w6_stats,Team = w2_Team_Names)
+
+
+
+w7_stats <- w7_stats[order(w7_stats$Team),]
+w7_stats = cbind(w7_stats, w2_Team_Names)
+
+w7_stats = w7_stats %>%
+  select(-Team)
+w7_stats = rename(w7_stats,Team = w2_Team_Names)
+
+
+
+w8_stats <- w8_stats[order(w8_stats$Team),]
+w8_stats = cbind(w8_stats, w2_Team_Names)
+
+w8_stats = w8_stats %>%
+  select(-Team)
+w8_stats = rename(w8_stats,Team = w2_Team_Names)
+
+
+
+w9_stats <- w9_stats[order(w9_stats$Team),]
+w9_stats = cbind(w9_stats, w2_Team_Names)
+
+w9_stats = w9_stats %>%
+  select(-Team)
+w9_stats = rename(w9_stats,Team = w2_Team_Names)
+
+
+
+w10_stats <- w10_stats[order(w10_stats$Team),]
+w10_stats = cbind(w10_stats, w2_Team_Names)
+
+w10_stats = w10_stats %>%
+  select(-Team)
+w10_stats = rename(w10_stats,Team = w2_Team_Names)
+
+
+
+w11_stats <- w11_stats[order(w11_stats$Team),]
+w11_stats = cbind(w11_stats, w2_Team_Names)
+
+w11_stats = w11_stats %>%
+  select(-Team)
+w11_stats = rename(w11_stats,Team = w2_Team_Names)
+
+
+
+w12_stats <- w12_stats[order(w12_stats$Team),]
+w12_stats = cbind(w12_stats, w2_Team_Names)
+
+w12_stats = w12_stats %>%
+  select(-Team)
+w12_stats = rename(w12_stats,Team = w2_Team_Names)
+
+
+
+w13_stats <- w13_stats[order(w13_stats$Team),]
+w13_stats = cbind(w13_stats, w2_Team_Names)
+
+w13_stats = w13_stats %>%
+  select(-Team)
+w13_stats = rename(w13_stats,Team = w2_Team_Names)
+
+
+w14_stats <- w14_stats[order(w14_stats$Team),]
+w14_stats = cbind(w14_stats, w2_Team_Names)
+
+w14_stats = w14_stats %>%
+  select(-Team)
+w14_stats = rename(w14_stats,Team = w2_Team_Names)
+
+
+w15_stats <- w15_stats[order(w15_stats$Team),]
+w15_stats = cbind(w15_stats, w2_Team_Names)
+
+w15_stats = w15_stats %>%
+  select(-Team)
+w15_stats = rename(w15_stats,Team = w2_Team_Names)
+
+b1_stats <- b1_stats[order(b1_stats$Team),]
+b1_stats = cbind(b1_stats, w2_Team_Names)
+
+b1_stats = b1_stats %>%
+  select(-Team)
+b1_stats = rename(b1_stats,Team = w2_Team_Names)
+
+```
+
+
+Now, All of the Team Stats Data Frames have been given the Team Names of the Outcome Data frames, in the correct order. 
+
+
+
+W2 Team Stats/W3 Outcomes: Split W2 Teams into Home and Away Team df's, rename variables appropriately, then combine with Week3Outcomes:
+
+```{r}
+#Split Week 2 Data into Away Team and Home Team DF's, rename variables accordingly
+
+W2_Away_Teams_Vector = Week3Outcomes$Away_Team
+W2_Away_Teams_Stats_DF = w2_stats %>%
+  filter(Team%in% W2_Away_Teams_Vector)
+
+#make vector to programatically assign Away_ to all variables in W2_Away_Teams_Stats_DF
+
+W2_Away_Teams_Col_Names <- names(W2_Away_Teams_Stats_DF)
+
+
+W2_Away_Teams_Stats_DF <-
+setNames(W2_Away_Teams_Stats_DF[W2_Away_Teams_Col_Names], paste0("Away_Team_", W2_Away_Teams_Col_Names))
+
+#Make sure Team Column is labeled "Away_Team" For Merging Purposes:
+
+W2_Away_Teams_Stats_DF = rename(W2_Away_Teams_Stats_DF, Away_Team = Away_Team_Team)
+
+
+
+
+#Do the Same for The Home Team Variables For Week 2:
+
+W2_Home_Teams_Vector = Week3Outcomes$Home_Team
+W2_Home_Teams_Stats_DF = w2_stats %>%
+  filter(Team%in% W2_Home_Teams_Vector)
+
+#make vector to programatically assign Away_ to all variables in W2_Away_Teams_Stats_DF
+
+W2_Home_Teams_Col_Names <- names(W2_Home_Teams_Stats_DF)
+
+
+W2_Home_Teams_Stats_DF <-
+setNames(W2_Home_Teams_Stats_DF[W2_Home_Teams_Col_Names], paste0("Home_Team_", W2_Home_Teams_Col_Names))
+
+
+#Make sure Team Column is labeled "Away_Team" For Merging Purposes:
+
+W2_Home_Teams_Stats_DF = rename(W2_Home_Teams_Stats_DF, Home_Team = Home_Team_Team)
+
+
+
+
+#combine Week 2 Home Teams, Away_Teams, and Outcomes into a single Week 2 Dataset: 
+
+Week2Final = inner_join(Week3Outcomes, W2_Away_Teams_Stats_DF, by = "Away_Team") %>%
+  inner_join(W2_Home_Teams_Stats_DF, by = "Home_Team")
+
+
+```
+
+
+
+W3 Team Stats/W4 Outcomes: Split W3 Teams into Home and Away Team df's, rename variables appropriately, then combine with Week4Outcomes:
+
+```{r}
+#Split Week 3 Data into Away Team and Home Team DF's, rename variables accordingly
+
+W3_Away_Teams_Vector = Week4Outcomes$Away_Team
+W3_Away_Teams_Stats_DF = w3_stats %>%
+  filter(Team%in% W3_Away_Teams_Vector)
+
+#make vector to programatically assign Away_ to all variables in W3_Away_Teams_Stats_DF
+
+W3_Away_Teams_Col_Names <- names(W3_Away_Teams_Stats_DF)
+
+
+W3_Away_Teams_Stats_DF <-
+setNames(W3_Away_Teams_Stats_DF[W3_Away_Teams_Col_Names], paste0("Away_Team_", W3_Away_Teams_Col_Names))
+
+#Make sure Team Column is labeled "Away_Team" For Merging Purposes:
+
+W3_Away_Teams_Stats_DF = rename(W3_Away_Teams_Stats_DF, Away_Team = Away_Team_Team)
+
+
+
+
+#Do the Same for The Home Team Variables For Week 3:
+
+W3_Home_Teams_Vector = Week4Outcomes$Home_Team
+W3_Home_Teams_Stats_DF = w3_stats %>%
+  filter(Team%in% W3_Home_Teams_Vector)
+
+#make vector to programatically assign Away_ to all variables in W3_Away_Teams_Stats_DF
+
+W3_Home_Teams_Col_Names <- names(W3_Home_Teams_Stats_DF)
+
+
+W3_Home_Teams_Stats_DF <-
+setNames(W3_Home_Teams_Stats_DF[W3_Home_Teams_Col_Names], paste0("Home_Team_", W3_Home_Teams_Col_Names))
+
+
+#Make sure Team Column is labeled "Away_Team" For Merging Purposes:
+
+W3_Home_Teams_Stats_DF = rename(W3_Home_Teams_Stats_DF, Home_Team = Home_Team_Team)
+
+
+
+
+#combine Week 3 Home Teams, Away_Teams, and Outcomes into a single Week 3 Dataset: 
+
+Week3Final = inner_join(Week4Outcomes, W3_Away_Teams_Stats_DF, by = "Away_Team") %>%
+  inner_join(W3_Home_Teams_Stats_DF, by = "Home_Team")
+
+
+
+
+
+
+```
+
+
+
+W4 Team Stats/W5 Outcomes: Split W4 Teams into Home and Away Team df's, rename variables appropriately, then combine with Week5Outcomes:
+
+```{r}
+#Split Week 4 Data into Away Team and Home Team DF's, rename variables accordingly
+
+W4_Away_Teams_Vector = Week5Outcomes$Away_Team
+W4_Away_Teams_Stats_DF = w4_stats %>%
+  filter(Team%in% W4_Away_Teams_Vector)
+
+#make vector to programatically assign Away_ to all variables in W4_Away_Teams_Stats_DF
+
+W4_Away_Teams_Col_Names <- names(W4_Away_Teams_Stats_DF)
+
+
+W4_Away_Teams_Stats_DF <-
+setNames(W4_Away_Teams_Stats_DF[W4_Away_Teams_Col_Names], paste0("Away_Team_", W4_Away_Teams_Col_Names))
+
+#Make sure Team Column is labeled "Away_Team" For Merging Purposes:
+
+W4_Away_Teams_Stats_DF = rename(W4_Away_Teams_Stats_DF, Away_Team = Away_Team_Team)
+
+
+
+
+#Do the Same for The Home Team Variables For Week 4:
+
+W4_Home_Teams_Vector = Week5Outcomes$Home_Team
+W4_Home_Teams_Stats_DF = w4_stats %>%
+  filter(Team%in% W4_Home_Teams_Vector)
+
+#make vector to programatically assign Away_ to all variables in W4_Away_Teams_Stats_DF
+
+W4_Home_Teams_Col_Names <- names(W4_Home_Teams_Stats_DF)
+
+
+W4_Home_Teams_Stats_DF <-
+setNames(W4_Home_Teams_Stats_DF[W4_Home_Teams_Col_Names], paste0("Home_Team_", W4_Home_Teams_Col_Names))
+
+
+#Make sure Team Column is labeled "Away_Team" For Merging Purposes:
+
+W4_Home_Teams_Stats_DF = rename(W4_Home_Teams_Stats_DF, Home_Team = Home_Team_Team)
+
+
+
+
+#combine Week 4 Home Teams, Away_Teams, and Outcomes into a single Week 4 Dataset: 
+
+Week4Final = inner_join(Week5Outcomes, W4_Away_Teams_Stats_DF, by = "Away_Team") %>%
+  inner_join(W4_Home_Teams_Stats_DF, by = "Home_Team")
+
+
+
+
+
+
+```
+
+
+W5 Team Stats/W6 Outcomes: Split W5 Teams into Home and Away Team df's, rename variables appropriately, then combine with Week6Outcomes:
+
+```{r}
+#Split Week 5 Data into Away Team and Home Team DF's, rename variables accordingly
+
+W5_Away_Teams_Vector = Week6Outcomes$Away_Team
+W5_Away_Teams_Stats_DF = w5_stats %>%
+  filter(Team%in% W5_Away_Teams_Vector)
+
+#make vector to programatically assign Away_ to all variables in W5_Away_Teams_Stats_DF
+
+W5_Away_Teams_Col_Names <- names(W5_Away_Teams_Stats_DF)
+
+
+W5_Away_Teams_Stats_DF <-
+setNames(W5_Away_Teams_Stats_DF[W5_Away_Teams_Col_Names], paste0("Away_Team_", W5_Away_Teams_Col_Names))
+
+#Make sure Team Column is labeled "Away_Team" For Merging Purposes:
+
+W5_Away_Teams_Stats_DF = rename(W5_Away_Teams_Stats_DF, Away_Team = Away_Team_Team)
+
+
+
+
+#Do the Same for The Home Team Variables:
+
+W5_Home_Teams_Vector = Week6Outcomes$Home_Team
+W5_Home_Teams_Stats_DF = w5_stats %>%
+  filter(Team%in% W5_Home_Teams_Vector)
+
+#make vector to programatically assign Away_ to all variables in W5_Away_Teams_Stats_DF
+
+W5_Home_Teams_Col_Names <- names(W5_Home_Teams_Stats_DF)
+
+
+W5_Home_Teams_Stats_DF <-
+setNames(W5_Home_Teams_Stats_DF[W5_Home_Teams_Col_Names], paste0("Home_Team_", W5_Home_Teams_Col_Names))
+
+
+#Make sure Team Column is labeled "Away_Team" For Merging Purposes:
+
+W5_Home_Teams_Stats_DF = rename(W5_Home_Teams_Stats_DF, Home_Team = Home_Team_Team)
+
+
+
+
+#combine Home Teams, Away_Teams, and Outcomes into a single Week  Dataset: 
+
+Week5Final = inner_join(Week6Outcomes, W5_Away_Teams_Stats_DF, by = "Away_Team") %>%
+  inner_join(W5_Home_Teams_Stats_DF, by = "Home_Team")
+
+
+
+```
+
+
+
+W6 Team Stats/W7 Outcomes: Split W6 Teams into Home and Away Team df's, rename variables appropriately, then combine with Week7Outcomes:
+
+```{r}
+#Split Week 6 Data into Away Team and Home Team DF's, rename variables accordingly
+
+W6_Away_Teams_Vector = Week7Outcomes$Away_Team
+W6_Away_Teams_Stats_DF = w6_stats %>%
+  filter(Team%in% W6_Away_Teams_Vector)
+
+#make vector to programatically assign Away_ to all variables in W6_Away_Teams_Stats_DF
+
+W6_Away_Teams_Col_Names <- names(W6_Away_Teams_Stats_DF)
+
+
+W6_Away_Teams_Stats_DF <-
+setNames(W6_Away_Teams_Stats_DF[W6_Away_Teams_Col_Names], paste0("Away_Team_", W6_Away_Teams_Col_Names))
+
+#Make sure Team Column is labeled "Away_Team" For Merging Purposes:
+
+W6_Away_Teams_Stats_DF = rename(W6_Away_Teams_Stats_DF, Away_Team = Away_Team_Team)
+
+
+
+
+#Do the Same for The Home Team Variables For Week 6:
+
+W6_Home_Teams_Vector = Week7Outcomes$Home_Team
+W6_Home_Teams_Stats_DF = w6_stats %>%
+  filter(Team%in% W6_Home_Teams_Vector)
+
+#make vector to programatically assign Away_ to all variables in W6_Away_Teams_Stats_DF
+
+W6_Home_Teams_Col_Names <- names(W6_Home_Teams_Stats_DF)
+
+
+W6_Home_Teams_Stats_DF <-
+setNames(W6_Home_Teams_Stats_DF[W6_Home_Teams_Col_Names], paste0("Home_Team_", W6_Home_Teams_Col_Names))
+
+
+#Make sure Team Column is labeled "Away_Team" For Merging Purposes:
+
+W6_Home_Teams_Stats_DF = rename(W6_Home_Teams_Stats_DF, Home_Team = Home_Team_Team)
+
+
+
+
+#combine Week 6 Home Teams, Away_Teams, and Outcomes into a single Week 6 Dataset: 
+
+Week6Final = inner_join(Week7Outcomes, W6_Away_Teams_Stats_DF, by = "Away_Team") %>%
+  inner_join(W6_Home_Teams_Stats_DF, by = "Home_Team")
+
+
+
+
+
+
+```
+
+
+W7 Team Stats/W8 Outcomes: Split W7 Teams into Home and Away Team df's, rename variables appropriately, then combine with Week3Outcomes:
+
+```{r}
+
+#Split Week 7 Data into Away Team and Home Team DF's, rename variables accordingly
+
+W7_Away_Teams_Vector = Week8Outcomes$Away_Team
+W7_Away_Teams_Stats_DF = w7_stats %>%
+  filter(Team%in% W7_Away_Teams_Vector)
+
+#make vector to programatically assign Away_ to all variables in W7_Away_Teams_Stats_DF
+
+W7_Away_Teams_Col_Names <- names(W7_Away_Teams_Stats_DF)
+
+
+W7_Away_Teams_Stats_DF <-
+setNames(W7_Away_Teams_Stats_DF[W7_Away_Teams_Col_Names], paste0("Away_Team_", W7_Away_Teams_Col_Names))
+
+#Make sure Team Column is labeled "Away_Team" For Merging Purposes:
+
+W7_Away_Teams_Stats_DF = rename(W7_Away_Teams_Stats_DF, Away_Team = Away_Team_Team)
+
+
+
+
+#Do the Same for The Home Team Variables:
+
+W7_Home_Teams_Vector = Week8Outcomes$Home_Team
+W7_Home_Teams_Stats_DF = w7_stats %>%
+  filter(Team%in% W7_Home_Teams_Vector)
+
+#make vector to programatically assign Away_ to all variables in W7_Away_Teams_Stats_DF
+
+W7_Home_Teams_Col_Names <- names(W7_Home_Teams_Stats_DF)
+
+
+W7_Home_Teams_Stats_DF <-
+setNames(W7_Home_Teams_Stats_DF[W7_Home_Teams_Col_Names], paste0("Home_Team_", W7_Home_Teams_Col_Names))
+
+
+#Make sure Team Column is labeled "Away_Team" For Merging Purposes:
+
+W7_Home_Teams_Stats_DF = rename(W7_Home_Teams_Stats_DF, Home_Team = Home_Team_Team)
+
+
+
+
+#combine Home Teams, Away_Teams, and Outcomes into a single Dataset: 
+
+Week7Final = inner_join(Week8Outcomes, W7_Away_Teams_Stats_DF, by = "Away_Team") %>%
+  inner_join(W7_Home_Teams_Stats_DF, by = "Home_Team")
+
+
+```
+
+
+
+W8 Team Stats/W9 Outcomes: Split W8 Teams into Home and Away Team df's, rename variables appropriately, then combine with Week9Outcomes:
+
+```{r}
+#Split Week 8 Data into Away Team and Home Team DF's, rename variables accordingly
+
+W8_Away_Teams_Vector = Week9Outcomes$Away_Team
+W8_Away_Teams_Stats_DF = w8_stats %>%
+  filter(Team%in% W8_Away_Teams_Vector)
+
+#make vector to programatically assign Away_ to all variables in W8_Away_Teams_Stats_DF
+
+W8_Away_Teams_Col_Names <- names(W8_Away_Teams_Stats_DF)
+
+
+W8_Away_Teams_Stats_DF <-
+setNames(W8_Away_Teams_Stats_DF[W8_Away_Teams_Col_Names], paste0("Away_Team_", W8_Away_Teams_Col_Names))
+
+#Make sure Team Column is labeled "Away_Team" For Merging Purposes:
+
+W8_Away_Teams_Stats_DF = rename(W8_Away_Teams_Stats_DF, Away_Team = Away_Team_Team)
+
+
+
+
+#Do the Same for The Home Team Variables For Week 8:
+
+W8_Home_Teams_Vector = Week9Outcomes$Home_Team
+W8_Home_Teams_Stats_DF = w8_stats %>%
+  filter(Team%in% W8_Home_Teams_Vector)
+
+#make vector to programatically assign Away_ to all variables in W8_Away_Teams_Stats_DF
+
+W8_Home_Teams_Col_Names <- names(W8_Home_Teams_Stats_DF)
+
+
+W8_Home_Teams_Stats_DF <-
+setNames(W8_Home_Teams_Stats_DF[W8_Home_Teams_Col_Names], paste0("Home_Team_", W8_Home_Teams_Col_Names))
+
+
+#Make sure Team Column is labeled "Away_Team" For Merging Purposes:
+
+W8_Home_Teams_Stats_DF = rename(W8_Home_Teams_Stats_DF, Home_Team = Home_Team_Team)
+
+
+
+
+#combine Week 8 Home Teams, Away_Teams, and Outcomes into a single Week 8 Dataset: 
+
+Week8Final = inner_join(Week9Outcomes, W8_Away_Teams_Stats_DF, by = "Away_Team") %>%
+  inner_join(W8_Home_Teams_Stats_DF, by = "Home_Team")
+
+
+
+
+
+
+```
+
+
+
+W9 Team Stats/W10 Outcomes: Split W9 Teams into Home and Away Team df's, rename variables appropriately, then combine with Week10Outcomes:
+
+```{r}
+#Split Week 9 Data into Away Team and Home Team DF's, rename variables accordingly
+
+W9_Away_Teams_Vector = Week10Outcomes$Away_Team
+W9_Away_Teams_Stats_DF = w9_stats %>%
+  filter(Team%in% W9_Away_Teams_Vector)
+
+#make vector to programatically assign Away_ to all variables in W9_Away_Teams_Stats_DF
+
+W9_Away_Teams_Col_Names <- names(W9_Away_Teams_Stats_DF)
+
+
+W9_Away_Teams_Stats_DF <-
+setNames(W9_Away_Teams_Stats_DF[W9_Away_Teams_Col_Names], paste0("Away_Team_", W9_Away_Teams_Col_Names))
+
+#Make sure Team Column is labeled "Away_Team" For Merging Purposes:
+
+W9_Away_Teams_Stats_DF = rename(W9_Away_Teams_Stats_DF, Away_Team = Away_Team_Team)
+
+
+
+
+#Do the Same for The Home Team Variables For Week 9:
+
+W9_Home_Teams_Vector = Week10Outcomes$Home_Team
+W9_Home_Teams_Stats_DF = w9_stats %>%
+  filter(Team%in% W9_Home_Teams_Vector)
+
+#make vector to programatically assign Away_ to all variables in W9_Away_Teams_Stats_DF
+
+W9_Home_Teams_Col_Names <- names(W9_Home_Teams_Stats_DF)
+
+
+W9_Home_Teams_Stats_DF <-
+setNames(W9_Home_Teams_Stats_DF[W9_Home_Teams_Col_Names], paste0("Home_Team_", W9_Home_Teams_Col_Names))
+
+
+#Make sure Team Column is labeled "Away_Team" For Merging Purposes:
+
+W9_Home_Teams_Stats_DF = rename(W9_Home_Teams_Stats_DF, Home_Team = Home_Team_Team)
+
+
+
+
+#combine Week 9 Home Teams, Away_Teams, and Outcomes into a single Week 9 Dataset: 
+
+Week9Final = inner_join(Week10Outcomes, W9_Away_Teams_Stats_DF, by = "Away_Team") %>%
+  inner_join(W9_Home_Teams_Stats_DF, by = "Home_Team")
+
+
+
+
+
+
+```
+
+
+W10 Team Stats/W11 Outcomes: Split W10 Teams into Home and Away Team df's, rename variables appropriately, then combine with Week11Outcomes:
+
+```{r}
+#Split Week 10 Data into Away Team and Home Team DF's, rename variables accordingly
+
+W10_Away_Teams_Vector = Week11Outcomes$Away_Team
+W10_Away_Teams_Stats_DF = w10_stats %>%
+  filter(Team%in% W10_Away_Teams_Vector)
+
+#make vector to programatically assign Away_ to all variables in W10_Away_Teams_Stats_DF
+
+W10_Away_Teams_Col_Names <- names(W10_Away_Teams_Stats_DF)
+
+
+W10_Away_Teams_Stats_DF <-
+setNames(W10_Away_Teams_Stats_DF[W10_Away_Teams_Col_Names], paste0("Away_Team_", W10_Away_Teams_Col_Names))
+
+#Make sure Team Column is labeled "Away_Team" For Merging Purposes:
+
+W10_Away_Teams_Stats_DF = rename(W10_Away_Teams_Stats_DF, Away_Team = Away_Team_Team)
+
+
+
+#Do the Same for The Home Team Variables For Week 10:
+
+W10_Home_Teams_Vector = Week11Outcomes$Home_Team
+W10_Home_Teams_Stats_DF = w10_stats %>%
+  filter(Team%in% W10_Home_Teams_Vector)
+
+#make vector to programatically assign Away_ to all variables in W10_Away_Teams_Stats_DF
+
+W10_Home_Teams_Col_Names <- names(W10_Home_Teams_Stats_DF)
+
+
+W10_Home_Teams_Stats_DF <-
+setNames(W10_Home_Teams_Stats_DF[W10_Home_Teams_Col_Names], paste0("Home_Team_", W10_Home_Teams_Col_Names))
+
+
+#Make sure Team Column is labeled "Away_Team" For Merging Purposes:
+
+W10_Home_Teams_Stats_DF = rename(W10_Home_Teams_Stats_DF, Home_Team = Home_Team_Team)
+
+
+
+
+#combine Week 10 Home Teams, Away_Teams, and Outcomes into a single Week 10 Dataset: 
+
+Week10Final = inner_join(Week11Outcomes, W10_Away_Teams_Stats_DF, by = "Away_Team") %>%
+  inner_join(W10_Home_Teams_Stats_DF, by = "Home_Team")
+
+
+
+
+
+
+```
+
+
+
+W11 Team Stats/W12 Outcomes: Split W11 Teams into Home and Away Team df's, rename variables appropriately, then combine with Week12Outcomes:
+
+```{r}
+#Split Week 11 Data into Away Team and Home Team DF's, rename variables accordingly
+
+W11_Away_Teams_Vector = Week12Outcomes$Away_Team
+W11_Away_Teams_Stats_DF = w11_stats %>%
+  filter(Team%in% W11_Away_Teams_Vector)
+
+#make vector to programatically assign Away_ to all variables in W11_Away_Teams_Stats_DF
+
+W11_Away_Teams_Col_Names <- names(W11_Away_Teams_Stats_DF)
+
+
+W11_Away_Teams_Stats_DF <-
+setNames(W11_Away_Teams_Stats_DF[W11_Away_Teams_Col_Names], paste0("Away_Team_", W11_Away_Teams_Col_Names))
+
+#Make sure Team Column is labeled "Away_Team" For Merging Purposes:
+
+W11_Away_Teams_Stats_DF = rename(W11_Away_Teams_Stats_DF, Away_Team = Away_Team_Team)
+
+
+
+
+#Do the Same for The Home Team Variables For Week 11:
+
+W11_Home_Teams_Vector = Week12Outcomes$Home_Team
+W11_Home_Teams_Stats_DF = w11_stats %>%
+  filter(Team%in% W11_Home_Teams_Vector)
+
+#make vector to programatically assign Away_ to all variables in W11_Away_Teams_Stats_DF
+
+W11_Home_Teams_Col_Names <- names(W11_Home_Teams_Stats_DF)
+
+
+W11_Home_Teams_Stats_DF <-
+setNames(W11_Home_Teams_Stats_DF[W11_Home_Teams_Col_Names], paste0("Home_Team_", W11_Home_Teams_Col_Names))
+
+
+#Make sure Team Column is labeled "Away_Team" For Merging Purposes:
+
+W11_Home_Teams_Stats_DF = rename(W11_Home_Teams_Stats_DF, Home_Team = Home_Team_Team)
+
+
+
+
+#combine Week 11 Home Teams, Away_Teams, and Outcomes into a single Week 11 Dataset: 
+
+Week11Final = inner_join(Week12Outcomes, W11_Away_Teams_Stats_DF, by = "Away_Team") %>%
+  inner_join(W11_Home_Teams_Stats_DF, by = "Home_Team")
+
+
+
+
+
+
+```
+
+
+
+W12 Team Stats/W13 Outcomes: Split W12 Teams into Home and Away Team df's, rename variables appropriately, then combine with Week13Outcomes:
+
+```{r}
+#Split Week 12 Data into Away Team and Home Team DF's, rename variables accordingly
+
+W12_Away_Teams_Vector = Week13Outcomes$Away_Team
+W12_Away_Teams_Stats_DF = w12_stats %>%
+  filter(Team%in% W12_Away_Teams_Vector)
+
+#make vector to programatically assign Away_ to all variables in W12_Away_Teams_Stats_DF
+
+W12_Away_Teams_Col_Names <- names(W12_Away_Teams_Stats_DF)
+
+
+W12_Away_Teams_Stats_DF <-
+setNames(W12_Away_Teams_Stats_DF[W12_Away_Teams_Col_Names], paste0("Away_Team_", W12_Away_Teams_Col_Names))
+
+#Make sure Team Column is labeled "Away_Team" For Merging Purposes:
+
+W12_Away_Teams_Stats_DF = rename(W12_Away_Teams_Stats_DF, Away_Team = Away_Team_Team)
+
+
+
+
+#Do the Same for The Home Team Variables:
+
+W12_Home_Teams_Vector = Week13Outcomes$Home_Team
+W12_Home_Teams_Stats_DF = w12_stats %>%
+  filter(Team%in% W12_Home_Teams_Vector)
+
+#make vector to programatically assign Away_ to all variables in W12_Away_Teams_Stats_DF
+
+W12_Home_Teams_Col_Names <- names(W12_Home_Teams_Stats_DF)
+
+
+W12_Home_Teams_Stats_DF <-
+setNames(W12_Home_Teams_Stats_DF[W12_Home_Teams_Col_Names], paste0("Home_Team_", W12_Home_Teams_Col_Names))
+
+
+#Make sure Team Column is labeled "Away_Team" For Merging Purposes:
+
+W12_Home_Teams_Stats_DF = rename(W12_Home_Teams_Stats_DF, Home_Team = Home_Team_Team)
+
+
+
+
+#combine Home Teams, Away_Teams, and Outcomes into a single Dataset: 
+
+Week12Final = inner_join(Week13Outcomes, W12_Away_Teams_Stats_DF, by = "Away_Team") %>%
+  inner_join(W12_Home_Teams_Stats_DF, by = "Home_Team")
+
+
+
+
+```
+
+
+
+W13 Team Stats/W14 Outcomes: Split W13 Teams into Home and Away Team df's, rename variables appropriately, then combine with Week14Outcomes:
+
+```{r}
+#Split Week 13 Data into Away Team and Home Team DF's, rename variables accordingly
+
+W13_Away_Teams_Vector = Week14Outcomes$Away_Team
+W13_Away_Teams_Stats_DF = w13_stats %>%
+  filter(Team%in% W13_Away_Teams_Vector)
+
+#make vector to programatically assign Away_ to all variables in W13_Away_Teams_Stats_DF
+
+W13_Away_Teams_Col_Names <- names(W13_Away_Teams_Stats_DF)
+
+
+W13_Away_Teams_Stats_DF <-
+setNames(W13_Away_Teams_Stats_DF[W13_Away_Teams_Col_Names], paste0("Away_Team_", W13_Away_Teams_Col_Names))
+
+#Make sure Team Column is labeled "Away_Team" For Merging Purposes:
+
+W13_Away_Teams_Stats_DF = rename(W13_Away_Teams_Stats_DF, Away_Team = Away_Team_Team)
+
+
+
+
+#Do the Same for The Home Team Variables For Week 2:
+
+W13_Home_Teams_Vector = Week14Outcomes$Home_Team
+W13_Home_Teams_Stats_DF = w13_stats %>%
+  filter(Team%in% W13_Home_Teams_Vector)
+
+#make vector to programatically assign Away_ to all variables in W13_Away_Teams_Stats_DF
+
+W13_Home_Teams_Col_Names <- names(W13_Home_Teams_Stats_DF)
+
+
+W13_Home_Teams_Stats_DF <-
+setNames(W13_Home_Teams_Stats_DF[W13_Home_Teams_Col_Names], paste0("Home_Team_", W13_Home_Teams_Col_Names))
+
+
+#Make sure Team Column is labeled "Away_Team" For Merging Purposes:
+
+W13_Home_Teams_Stats_DF = rename(W13_Home_Teams_Stats_DF, Home_Team = Home_Team_Team)
+
+
+
+
+#combine Week 2 Home Teams, Away_Teams, and Outcomes into a single Week 2 Dataset: 
+
+Week13Final = inner_join(Week14Outcomes, W13_Away_Teams_Stats_DF, by = "Away_Team") %>%
+  inner_join(W13_Home_Teams_Stats_DF, by = "Home_Team")
+
+
+
+
+```
+
+
+
+W14 Team Stats/W15 Outcomes: Split W14 Teams into Home and Away Team df's, rename variables appropriately, then combine with Week15Outcomes:
+
+```{r}
+#Split Week 14 Data into Away Team and Home Team DF's, rename variables accordingly
+
+W14_Away_Teams_Vector = Week15Outcomes$Away_Team
+W14_Away_Teams_Stats_DF = w14_stats %>%
+  filter(Team%in% W14_Away_Teams_Vector)
+
+#make vector to programatically assign Away_ to all variables in W14_Away_Teams_Stats_DF
+
+W14_Away_Teams_Col_Names <- names(W14_Away_Teams_Stats_DF)
+
+
+W14_Away_Teams_Stats_DF <-
+setNames(W14_Away_Teams_Stats_DF[W14_Away_Teams_Col_Names], paste0("Away_Team_", W14_Away_Teams_Col_Names))
+
+#Make sure Team Column is labeled "Away_Team" For Merging Purposes:
+
+W14_Away_Teams_Stats_DF = rename(W14_Away_Teams_Stats_DF, Away_Team = Away_Team_Team)
+
+
+
+
+#Do the Same for The Home Team Variables For Week 2:
+
+W14_Home_Teams_Vector = Week15Outcomes$Home_Team
+W14_Home_Teams_Stats_DF = w14_stats %>%
+  filter(Team%in% W14_Home_Teams_Vector)
+
+#make vector to programatically assign Away_ to all variables in W14_Away_Teams_Stats_DF
+
+W14_Home_Teams_Col_Names <- names(W14_Home_Teams_Stats_DF)
+
+
+W14_Home_Teams_Stats_DF <-
+setNames(W14_Home_Teams_Stats_DF[W14_Home_Teams_Col_Names], paste0("Home_Team_", W14_Home_Teams_Col_Names))
+
+
+#Make sure Team Column is labeled "Away_Team" For Merging Purposes:
+
+W14_Home_Teams_Stats_DF = rename(W14_Home_Teams_Stats_DF, Home_Team = Home_Team_Team)
+
+
+
+
+#combine Week 2 Home Teams, Away_Teams, and Outcomes into a single Week 2 Dataset: 
+
+Week14Final = inner_join(Week15Outcomes, W14_Away_Teams_Stats_DF, by = "Away_Team") %>%
+  inner_join(W14_Home_Teams_Stats_DF, by = "Home_Team")
+
+
+
+
+```
+
+
+
+W15 Team Stats/W17 Outcomes: Split W15 Teams into Home and Away Team df's, rename variables appropriately, then combine with Week17Outcomes:
+
+```{r}
+
+#remember, there were no games played in week 16, so that is skipped. Also: week 15 team stats will be used for for all bowl games except for Navy-Army (week 15) and the national championship.
+
+#Split Week 15 Data into Away Team and Home Team DF's, rename variables accordingly
+
+
+#will Use "B" instead of "W" to indicate bowl week, and restart numbering to 1 for the following dataset:
+
+B1_Away_Teams_Vector = Week17Outcomes$Away_Team
+B1_Away_Teams_Stats_DF = w15_stats %>%
+  filter(Team%in% B1_Away_Teams_Vector)
+
+#make vector to programatically assign Away_ to all variables in W15_Away_Teams_Stats_DF
+
+B1_Away_Teams_Col_Names <- names(B1_Away_Teams_Stats_DF)
+
+
+B1_Away_Teams_Stats_DF <-
+setNames(B1_Away_Teams_Stats_DF[B1_Away_Teams_Col_Names], paste0("Away_Team_", B1_Away_Teams_Col_Names))
+
+#Make sure Team Column is labeled "Away_Team" For Merging Purposes:
+
+B1_Away_Teams_Stats_DF = rename(B1_Away_Teams_Stats_DF, Away_Team = Away_Team_Team)
+
+
+#Do the Same for The Home Team Variables:
+
+B1_Home_Teams_Vector = Week17Outcomes$Home_Team
+B1_Home_Teams_Stats_DF = w15_stats %>%
+  filter(Team%in% B1_Home_Teams_Vector)
+
+#make vector to programatically assign Away_ to all variables in W15_Away_Teams_Stats_DF
+
+B1_Home_Teams_Col_Names <- names(B1_Home_Teams_Stats_DF)
+
+
+B1_Home_Teams_Stats_DF <-
+setNames(B1_Home_Teams_Stats_DF[B1_Home_Teams_Col_Names], paste0("Home_Team_", B1_Home_Teams_Col_Names))
+
+
+#Make sure Team Column is labeled "Away_Team" For Merging Purposes:
+
+B1_Home_Teams_Stats_DF = rename(B1_Home_Teams_Stats_DF, Home_Team = Home_Team_Team)
+
+
+#combine Week 15 Home Teams, Away_Teams, and Week 17 Outcomes into a single Dataset: 
+
+B1Final = inner_join(Week17Outcomes, B1_Away_Teams_Stats_DF, by = "Away_Team") %>%
+  inner_join(B1_Home_Teams_Stats_DF, by = "Home_Team")
+
+
+```
+
+
+W15 Team Stats/W18 Outcomes: Split W15 Teams into Home and Away Team df's, rename variables appropriately, then combine with Week18Outcomes:
+```{r}
+#remember, there were no games played in week 16, so that is skipped. Also: week 15 team stats will be used for for all bowl games except for Navy-Army (week 15) and the national championship.
+
+#Split Week 15 Data into Away Team and Home Team DF's, rename variables accordingly
+
+#will name variables more appropriately given the weirdness of bowl season
+
+#will Use "B" instead of "W" to indicate bowl week, and restart numbering to 1 for the following dataset:
+
+B2_Away_Teams_Vector = Week18Outcomes$Away_Team
+B2_Away_Teams_Stats_DF = w15_stats %>%
+  filter(Team%in% B2_Away_Teams_Vector)
+
+#make vector to programatically assign Away_ to all variables in W15_Away_Teams_Stats_DF
+
+B2_Away_Teams_Col_Names <- names(B2_Away_Teams_Stats_DF)
+
+
+B2_Away_Teams_Stats_DF <-
+setNames(B2_Away_Teams_Stats_DF[B2_Away_Teams_Col_Names], paste0("Away_Team_", B2_Away_Teams_Col_Names))
+
+#Make sure Team Column is labeled "Away_Team" For Merging Purposes:
+
+B2_Away_Teams_Stats_DF = rename(B2_Away_Teams_Stats_DF, Away_Team = Away_Team_Team)
+
+
+
+
+#Do the Same for The Home Team Variables:
+
+B2_Home_Teams_Vector = Week18Outcomes$Home_Team
+B2_Home_Teams_Stats_DF = w15_stats %>%
+  filter(Team%in% B2_Home_Teams_Vector)
+
+#make vector to programatically assign Away_ to all variables in W15_Away_Teams_Stats_DF
+
+B2_Home_Teams_Col_Names <- names(B2_Home_Teams_Stats_DF)
+
+
+B2_Home_Teams_Stats_DF <-
+setNames(B2_Home_Teams_Stats_DF[B2_Home_Teams_Col_Names], paste0("Home_Team_", B2_Home_Teams_Col_Names))
+
+
+#Make sure Team Column is labeled "Away_Team" For Merging Purposes:
+
+B2_Home_Teams_Stats_DF = rename(B2_Home_Teams_Stats_DF, Home_Team = Home_Team_Team)
+
+
+
+
+#combine Week 2 Home Teams, Away_Teams, and Outcomes into a single Dataset: 
+
+B2Final = inner_join(Week18Outcomes, B2_Away_Teams_Stats_DF, by = "Away_Team") %>%
+  inner_join(B2_Home_Teams_Stats_DF, by = "Home_Team")
+
+
+
+
+```
+
+W18 Team Stats/W19 Outcomes: Split W18 Teams into Home and Away Team df's, rename variables appropriately, then combine with Week19Outcomes:
+
+```{r}
+#Split Week 18 Data into Away Team and Home Team DF's, rename variables accordingly
+
+W18_Away_Teams_Vector = Week19Outcomes$Away_Team
+W18_Away_Teams_Stats_DF = b1_stats %>%
+  filter(Team%in% W18_Away_Teams_Vector)
+
+#make vector to programatically assign Away_ to all variables in W18_Away_Teams_Stats_DF
+
+W18_Away_Teams_Col_Names <- names(W18_Away_Teams_Stats_DF)
+
+
+W18_Away_Teams_Stats_DF <-
+setNames(W18_Away_Teams_Stats_DF[W18_Away_Teams_Col_Names], paste0("Away_Team_", W18_Away_Teams_Col_Names))
+
+#Make sure Team Column is labeled "Away_Team" For Merging Purposes:
+
+W18_Away_Teams_Stats_DF = rename(W18_Away_Teams_Stats_DF, Away_Team = Away_Team_Team)
+
+
+
+
+#Do the Same for The Home Team Variables:
+
+W18_Home_Teams_Vector = Week19Outcomes$Home_Team
+W18_Home_Teams_Stats_DF = b1_stats %>%
+  filter(Team%in% W18_Home_Teams_Vector)
+
+#make vector to programatically assign Away_ to all variables in W18_Away_Teams_Stats_DF
+
+W18_Home_Teams_Col_Names <- names(W18_Home_Teams_Stats_DF)
+
+
+W18_Home_Teams_Stats_DF <-
+setNames(W18_Home_Teams_Stats_DF[W18_Home_Teams_Col_Names], paste0("Home_Team_", W18_Home_Teams_Col_Names))
+
+
+#Make sure Team Column is labeled "Away_Team" For Merging Purposes:
+
+W18_Home_Teams_Stats_DF = rename(W18_Home_Teams_Stats_DF, Home_Team = Home_Team_Team)
+
+
+
+
+#combine Week 2 Home Teams, Away_Teams, and Outcomes into a single Dataset: 
+
+Week18Final = inner_join(Week19Outcomes, W18_Away_Teams_Stats_DF, by = "Away_Team") %>%
+  inner_join(W18_Home_Teams_Stats_DF, by = "Home_Team")
+
+
+
+```
+
+A few datasets appear to have more columns than others. Those columns will be excluded before merging:
+```{r}
+
+
+#Week14Final, B1Final, B2Final, and Week18Final have 2 less columns than the rest of the final datasets. These columns are the total scores of the Home and Away Teams. They are no longer needed now that the Winner variable has been assigned. Will make all other datasets conform to the columns of these datasets.
+
+
+#Get rid of a spare few games that were ultimately canceled
+
+#week11 Final Row 41 has game that was canceled: Coastal Carolina - Virgina
+Week11Final = Week11Final[-c(41),]
+
+
+```
+
+
+Finally, combine the Datasets in order to produce a final data set for analysis, and get rid of duplicate columns:
+
+```{r}
+FinalCombined = rbind(Week2Final, Week3Final, Week4Final, Week5Final, Week6Final, Week7Final, Week8Final, Week9Final, Week10Final, Week11Final, Week12Final, Week13Final, Week14Final, B1Final, B2Final, Week18Final)
+
+
+FinalCombined <- FinalCombined[!duplicated(as.list(FinalCombined))]
+#w2_stats <- w2_stats[!duplicated(as.list(w2_stats))]
+
+
+
+Week2FinalCleaned <- FinalCombined[1:45,]
+Week3FinalCleaned <- FinalCombined[46:100,]
+Week4FinalCleaned <- FinalCombined[101:150,]
+Week5FinalCleaned <- FinalCombined[151:201,]
+Week6FinalCleaned <- FinalCombined[202:247,]
+Week7FinalCleaned <- FinalCombined[248:298,]
+Week8FinalCleaned <- FinalCombined[299:344,]
+Week9FinalCleaned <- FinalCombined[345:403,]
+Week10FinalCleaned <- FinalCombined[404:465,]
+Week11FinalCleaned <- FinalCombined[466:524,]
+Week12FinalCleaned <- FinalCombined[525:586,]
+Week13FinalCleaned <- FinalCombined[587:597,]
+Week14FinalCleaned <- FinalCombined[598,]
+B1FinalCleaned <- FinalCombined[599:606,]
+B2FinalCleaned <- FinalCombined[607:630,]
+Week18FinalCleaned <- FinalCombined[631,]
+
+
+
+
+#Commented out code to write files out of courtesy for final submission. Uncomment to write finalized datasets.
+# write.csv(Week2FinalCleaned, "Finalized_Week2_Dataset_2022.csv")
+# write.csv(Week3FinalCleaned, "Finalized_Week3_Dataset_2022.csv")
+# write.csv(Week4FinalCleaned, "Finalized_Week4_Dataset_2022.csv")
+# write.csv(Week5FinalCleaned, "Finalized_Week5_Dataset_2022.csv")
+# write.csv(Week6FinalCleaned, "Finalized_Week6_Dataset_2022.csv")
+# write.csv(Week7FinalCleaned, "Finalized_Week7_Dataset_2022.csv")
+# write.csv(Week8FinalCleaned, "Finalized_Week8_Dataset_2022.csv")
+# write.csv(Week9FinalCleaned, "Finalized_Week9_Dataset_2022.csv")
+# write.csv(Week10FinalCleaned, "Finalized_Week10_Dataset_2022.csv")
+# write.csv(Week11FinalCleaned, "Finalized_Week11_Dataset_2022.csv")
+# write.csv(Week12FinalCleaned, "Finalized_Week12_Dataset_2022.csv")
+# write.csv(Week13FinalCleaned, "Finalized_Week13_Dataset_2022.csv")
+# write.csv(Week14FinalCleaned, "Finalized_Week14_Dataset_2022.csv")
+# write.csv(B1FinalCleaned, "Finalized_Bowls1_Dataset_2022.csv")
+# write.csv(B2FinalCleaned, "Finalized_Bowls2_Dataset_2022.csv")
+# write.csv(Week18FinalCleaned, "Finalized_Week18_Dataset_2022.csv")
+# write.csv(FinalCombined, "Finalized_Combined_Dataset_2022.csv")
+
+
+
+```
+
+
