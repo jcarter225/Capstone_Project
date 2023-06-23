@@ -1,0 +1,1330 @@
+---
+title: "2022 Football Season Statistical Analysis"
+author: "Justin Carter"
+date: "3/10/2023"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Import Dataset, check variable types:
+
+
+
+```{r}
+library(readr)
+library(tidyverse)
+library(randomForest)
+library(caret)
+library(dplyr)
+
+#original dataset was called the variable "football"
+
+Week2 = read_csv("Finalized_Week2_Dataset_2022.csv")
+Week3 = read_csv("Finalized_Week3_Dataset_2022.csv")
+Week4 = read_csv("Finalized_Week4_Dataset_2022.csv")
+Week5 = read_csv("Finalized_Week5_Dataset_2022.csv")
+Week6 = read_csv("Finalized_Week6_Dataset_2022.csv")
+Week7 = read_csv("Finalized_Week7_Dataset_2022.csv")
+Week8 = read_csv("Finalized_Week8_Dataset_2022.csv")
+Week9 = read_csv("Finalized_Week9_Dataset_2022.csv")
+Week10 = read_csv("Finalized_Week10_Dataset_2022.csv")
+Week11 = read_csv("Finalized_Week11_Dataset_2022.csv")
+Week12 = read_csv("Finalized_Week12_Dataset_2022.csv")
+Week13 = read_csv("Finalized_Week13_Dataset_2022.csv")
+Week14 = read_csv("Finalized_Week14_Dataset_2022.csv")
+Bowls1 = read_csv("Finalized_Bowls1_Dataset_2022.csv")
+Bowls2 = read_csv("Finalized_Bowls2_Dataset_2022.csv")
+Week18 = read_csv("Finalized_Week18_Dataset_2022.csv")
+Combined = read_csv("Finalized_Combined_Dataset_2022.csv")
+
+
+
+```
+
+#Week 2
+Modify Week 2 Dataset in Preparation for Analysis
+```{r}
+
+#Convert Away_Team_Time_Of_Possession_TOP to seconds
+Week2 <- separate(data=Week2, col = Away_Team_Time_Of_Possession_TOP, into = c("ATOP1", "ATOP2", "ATOP3"), sep =":")
+
+
+Week2 <- Week2 %>%
+  mutate(ATOP1 = as.numeric(ATOP1), ATOP2=as.numeric(ATOP2), ATOP3 = as.numeric(ATOP3), Away_Team_Time_Of_Possession_TOP = ATOP1*60 + ATOP2)%>%
+  select(-c(ATOP1, ATOP2, ATOP3))
+
+
+
+#Convert Home_Team_Time_Of_Possession_TOP to seconds
+Week2 <- separate(data=Week2, col = Home_Team_Time_Of_Possession_TOP, into = c("HTOP1", "HTOP2", "HTOP3"), sep =":")
+
+
+Week2 <- Week2 %>%
+  mutate(HTOP1 = as.numeric(HTOP1), HTOP2=as.numeric(HTOP2), HTOP3 = as.numeric(HTOP3), Home_Team_Time_Of_Possession_TOP = HTOP1*60 + HTOP2)%>%
+  select(-c(HTOP1, HTOP2, HTOP3))
+
+
+#Convert Away_Team_Time_Of_Possession_AvgTOP to seconds
+Week2 <- separate(data=Week2, col = Away_Team_Time_Of_Possession_AvgTOP, into = c("ATOP1", "ATOP2", "ATOP3"), sep =":")
+
+
+Week2 <- Week2 %>%
+  mutate(ATOP1 = as.numeric(ATOP1), ATOP2=as.numeric(ATOP2), ATOP3 = as.numeric(ATOP3), Away_Team_Time_Of_Possession_AvgTOP = ATOP1*60 + ATOP2)%>%
+  select(-c(ATOP1, ATOP2, ATOP3))
+
+#Convert Home_Team_Tiem_Of_Possession_AvgTOP to seconds
+Week2 <- separate(data=Week2, col = Home_Team_Time_Of_Possession_AvgTOP, into = c("ATOP1", "ATOP2", "ATOP3"), sep =":")
+
+
+Week2 <- Week2 %>%
+  mutate(ATOP1 = as.numeric(ATOP1), ATOP2=as.numeric(ATOP2), ATOP3 = as.numeric(ATOP3), Home_Team_Time_Of_Possession_AvgTOP = ATOP1*60 + ATOP2)%>%
+  select(-c(ATOP1, ATOP2, ATOP3))
+
+#Now, drop Home_Team, Away_Team, Away_Team_3rd_Down_Conversion_Pct_W-L, and Home_Team_3rd_Down_Conversion_Pct_W-L from the dataset:
+
+Week2 <- Week2 %>%
+  select(-c(Home_Team, Away_Team, `Away_Team_3rd_Down_Conversion_Pct_W-L`,
+            `Home_Team_3rd_Down_Conversion_Pct_W-L`))
+
+#Convert Winner to Factor Variable
+
+Week2 <- Week2 %>%
+  mutate(Winner = as.factor(Winner))
+
+#Drop redundant ...1 Column
+Week2 <- Week2 %>%
+  select(-(`...1`))
+
+```
+
+
+
+Make Random Forest Model to Predict Game Winner for Week 2
+```{r}
+ set.seed(1)
+ data_used = Week2
+ 
+ ctrl = trainControl(method= "cv", number=10)
+ Week2_rf_caret = train( Winner~.,
+              data = data_used,
+              method = "rf",
+              tuneGrid = expand.grid(mtry = c(18,19,20)),
+              trControl = ctrl)
+
+ Week2_rf_caret
+
+ 
+ Week2_rf_caret$finalModel
+ 
+ varImp(Week2_rf_caret)
+ 
+
+
+```
+
+
+
+#Week 3
+Modify Week 3 Dataset in Preparation for Analysis
+```{r}
+
+#Convert Away_Team_Time_Of_Possession_TOP to seconds
+Week3 <- separate(data=Week3, col = Away_Team_Time_Of_Possession_TOP, into = c("ATOP1", "ATOP2", "ATOP3"), sep =":")
+
+
+Week3 <- Week3 %>%
+  mutate(ATOP1 = as.numeric(ATOP1), ATOP2=as.numeric(ATOP2), ATOP3 = as.numeric(ATOP3), Away_Team_Time_Of_Possession_TOP = ATOP1*60 + ATOP2)%>%
+  select(-c(ATOP1, ATOP2, ATOP3))
+
+
+
+#Convert Home_Team_Time_Of_Possession_TOP to seconds
+Week3 <- separate(data=Week3, col = Home_Team_Time_Of_Possession_TOP, into = c("HTOP1", "HTOP2", "HTOP3"), sep =":")
+
+
+Week3 <- Week3 %>%
+  mutate(HTOP1 = as.numeric(HTOP1), HTOP2=as.numeric(HTOP2), HTOP3 = as.numeric(HTOP3), Home_Team_Time_Of_Possession_TOP = HTOP1*60 + HTOP2)%>%
+  select(-c(HTOP1, HTOP2, HTOP3))
+
+
+#Convert Away_Team_Time_Of_Possession_AvgTOP to seconds
+Week3 <- separate(data=Week3, col = Away_Team_Time_Of_Possession_AvgTOP, into = c("ATOP1", "ATOP2", "ATOP3"), sep =":")
+
+
+Week3 <- Week3 %>%
+  mutate(ATOP1 = as.numeric(ATOP1), ATOP2=as.numeric(ATOP2), ATOP3 = as.numeric(ATOP3), Away_Team_Time_Of_Possession_AvgTOP = ATOP1*60 + ATOP2)%>%
+  select(-c(ATOP1, ATOP2, ATOP3))
+
+#Convert Home_Team_Tiem_Of_Possession_AvgTOP to seconds
+Week3 <- separate(data=Week3, col = Home_Team_Time_Of_Possession_AvgTOP, into = c("ATOP1", "ATOP2", "ATOP3"), sep =":")
+
+
+Week3 <- Week3 %>%
+  mutate(ATOP1 = as.numeric(ATOP1), ATOP2=as.numeric(ATOP2), ATOP3 = as.numeric(ATOP3), Home_Team_Time_Of_Possession_AvgTOP = ATOP1*60 + ATOP2)%>%
+  select(-c(ATOP1, ATOP2, ATOP3))
+
+#Now, drop Home_Team, Away_Team, Away_Team_3rd_Down_Conversion_Pct_W-L, and Home_Team_3rd_Down_Conversion_Pct_W-L from the dataset:
+
+Week3 <- Week3 %>%
+  select(-c(Home_Team, Away_Team, `Away_Team_3rd_Down_Conversion_Pct_W-L`,
+            `Home_Team_3rd_Down_Conversion_Pct_W-L`))
+
+#Convert Winner to Factor Variable
+
+Week3 <- Week3 %>%
+  mutate(Winner = as.factor(Winner))
+
+#Drop redundant ...1 Column
+Week3 <- Week3 %>%
+  select(-(`...1`))
+
+
+
+```
+
+
+
+Make Random Forest Model to Predict Game Winner for Week 3
+```{r}
+ set.seed(1)
+ data_used = Week3
+ 
+ ctrl = trainControl(method= "cv", number=10)
+ Week3_rf_caret = train( Winner~.,
+              data = data_used,
+              method = "rf",
+              tuneGrid = expand.grid(mtry = c(18,19,20)),
+              trControl = ctrl)
+
+ Week3_rf_caret
+
+ 
+ Week3_rf_caret$finalModel
+ 
+ varImp(Week3_rf_caret)
+ 
+
+
+```
+
+
+#Week 4
+Modify Week 4 Dataset in Preparation for Analysis
+```{r}
+
+#Convert Away_Team_Time_Of_Possession_TOP to seconds
+Week4 <- separate(data=Week4, col = Away_Team_Time_Of_Possession_TOP, into = c("ATOP1", "ATOP2", "ATOP3"), sep =":")
+
+
+Week4 <- Week4 %>%
+  mutate(ATOP1 = as.numeric(ATOP1), ATOP2=as.numeric(ATOP2), ATOP3 = as.numeric(ATOP3), Away_Team_Time_Of_Possession_TOP = ATOP1*60 + ATOP2)%>%
+  select(-c(ATOP1, ATOP2, ATOP3))
+
+
+
+#Convert Home_Team_Time_Of_Possession_TOP to seconds
+Week4 <- separate(data=Week4, col = Home_Team_Time_Of_Possession_TOP, into = c("HTOP1", "HTOP2", "HTOP3"), sep =":")
+
+
+Week4 <- Week4 %>%
+  mutate(HTOP1 = as.numeric(HTOP1), HTOP2=as.numeric(HTOP2), HTOP3 = as.numeric(HTOP3), Home_Team_Time_Of_Possession_TOP = HTOP1*60 + HTOP2)%>%
+  select(-c(HTOP1, HTOP2, HTOP3))
+
+
+#Convert Away_Team_Time_Of_Possession_AvgTOP to seconds
+Week4 <- separate(data=Week4, col = Away_Team_Time_Of_Possession_AvgTOP, into = c("ATOP1", "ATOP2", "ATOP3"), sep =":")
+
+
+Week4 <- Week4 %>%
+  mutate(ATOP1 = as.numeric(ATOP1), ATOP2=as.numeric(ATOP2), ATOP3 = as.numeric(ATOP3), Away_Team_Time_Of_Possession_AvgTOP = ATOP1*60 + ATOP2)%>%
+  select(-c(ATOP1, ATOP2, ATOP3))
+
+#Convert Home_Team_Tiem_Of_Possession_AvgTOP to seconds
+Week4 <- separate(data=Week4, col = Home_Team_Time_Of_Possession_AvgTOP, into = c("ATOP1", "ATOP2", "ATOP3"), sep =":")
+
+
+Week4 <- Week4 %>%
+  mutate(ATOP1 = as.numeric(ATOP1), ATOP2=as.numeric(ATOP2), ATOP3 = as.numeric(ATOP3), Home_Team_Time_Of_Possession_AvgTOP = ATOP1*60 + ATOP2)%>%
+  select(-c(ATOP1, ATOP2, ATOP3))
+
+#Now, drop Home_Team, Away_Team, Away_Team_3rd_Down_Conversion_Pct_W-L, and Home_Team_3rd_Down_Conversion_Pct_W-L from the dataset:
+
+Week4 <- Week4 %>%
+  select(-c(Home_Team, Away_Team, `Away_Team_3rd_Down_Conversion_Pct_W-L`,
+            `Home_Team_3rd_Down_Conversion_Pct_W-L`))
+
+#Convert Winner to Factor Variable
+
+Week4 <- Week4 %>%
+  mutate(Winner = as.factor(Winner))
+
+#Drop redundant ...1 Column
+Week4 <- Week4 %>%
+  select(-(`...1`))
+
+
+
+```
+
+
+
+Make Random Forest Model to Predict Game Winner for Week 4
+```{r}
+ set.seed(1)
+ data_used = Week4
+ 
+ ctrl = trainControl(method= "cv", number=10)
+ Week4_rf_caret = train( Winner~.,
+              data = data_used,
+              method = "rf",
+              tuneGrid = expand.grid(mtry = c(18,19,20)),
+              trControl = ctrl)
+
+ Week4_rf_caret
+
+ 
+ Week4_rf_caret$finalModel
+ 
+ varImp(Week4_rf_caret)
+ 
+
+ 
+
+```
+
+
+#Week 5
+
+Modify Week 5 Dataset in Preparation for Analysis
+```{r}
+
+#Convert Away_Team_Time_Of_Possession_TOP to seconds
+Week5 <- separate(data=Week5, col = Away_Team_Time_Of_Possession_TOP, into = c("ATOP1", "ATOP2", "ATOP3"), sep =":")
+
+
+Week5 <- Week5 %>%
+  mutate(ATOP1 = as.numeric(ATOP1), ATOP2=as.numeric(ATOP2), ATOP3 = as.numeric(ATOP3), Away_Team_Time_Of_Possession_TOP = ATOP1*60 + ATOP2)%>%
+  select(-c(ATOP1, ATOP2, ATOP3))
+
+
+
+#Convert Home_Team_Time_Of_Possession_TOP to seconds
+Week5 <- separate(data=Week5, col = Home_Team_Time_Of_Possession_TOP, into = c("HTOP1", "HTOP2", "HTOP3"), sep =":")
+
+
+Week5 <- Week5 %>%
+  mutate(HTOP1 = as.numeric(HTOP1), HTOP2=as.numeric(HTOP2), HTOP3 = as.numeric(HTOP3), Home_Team_Time_Of_Possession_TOP = HTOP1*60 + HTOP2)%>%
+  select(-c(HTOP1, HTOP2, HTOP3))
+
+
+#Convert Away_Team_Time_Of_Possession_AvgTOP to seconds
+Week5 <- separate(data=Week5, col = Away_Team_Time_Of_Possession_AvgTOP, into = c("ATOP1", "ATOP2", "ATOP3"), sep =":")
+
+
+Week5 <- Week5 %>%
+  mutate(ATOP1 = as.numeric(ATOP1), ATOP2=as.numeric(ATOP2), ATOP3 = as.numeric(ATOP3), Away_Team_Time_Of_Possession_AvgTOP = ATOP1*60 + ATOP2)%>%
+  select(-c(ATOP1, ATOP2, ATOP3))
+
+#Convert Home_Team_Tiem_Of_Possession_AvgTOP to seconds
+Week5 <- separate(data=Week5, col = Home_Team_Time_Of_Possession_AvgTOP, into = c("ATOP1", "ATOP2", "ATOP3"), sep =":")
+
+
+Week5 <- Week5 %>%
+  mutate(ATOP1 = as.numeric(ATOP1), ATOP2=as.numeric(ATOP2), ATOP3 = as.numeric(ATOP3), Home_Team_Time_Of_Possession_AvgTOP = ATOP1*60 + ATOP2)%>%
+  select(-c(ATOP1, ATOP2, ATOP3))
+
+#Now, drop Home_Team, Away_Team, Away_Team_3rd_Down_Conversion_Pct_W-L, and Home_Team_3rd_Down_Conversion_Pct_W-L from the dataset:
+
+Week5 <- Week5 %>%
+  select(-c(Home_Team, Away_Team, `Away_Team_3rd_Down_Conversion_Pct_W-L`,
+            `Home_Team_3rd_Down_Conversion_Pct_W-L`))
+
+#Convert Winner to Factor Variable
+
+Week5 <- Week5 %>%
+  mutate(Winner = as.factor(Winner))
+
+#Drop redundant ...1 Column
+Week5 <- Week5 %>%
+  select(-(`...1`))
+
+
+
+```
+
+
+
+Make Random Forest Model to Predict Game Winner for Week 5
+```{r}
+ set.seed(1)
+ data_used = Week5
+ 
+ ctrl = trainControl(method= "cv", number=10)
+ Week5_rf_caret = train( Winner~.,
+              data = data_used,
+              method = "rf",
+              tuneGrid = expand.grid(mtry = c(18,19,20)),
+              trControl = ctrl)
+
+ Week5_rf_caret
+
+ 
+ Week5_rf_caret$finalModel
+ 
+ varImp(Week5_rf_caret)
+ 
+
+ 
+
+```
+
+
+
+#Week 6
+
+Modify Week 6 Dataset in Preparation for Analysis
+```{r}
+
+#Convert Away_Team_Time_Of_Possession_TOP to seconds
+Week6 <- separate(data=Week6, col = Away_Team_Time_Of_Possession_TOP, into = c("ATOP1", "ATOP2", "ATOP3"), sep =":")
+
+
+Week6 <- Week6 %>%
+  mutate(ATOP1 = as.numeric(ATOP1), ATOP2=as.numeric(ATOP2), ATOP3 = as.numeric(ATOP3), Away_Team_Time_Of_Possession_TOP = ATOP1*60 + ATOP2)%>%
+  select(-c(ATOP1, ATOP2, ATOP3))
+
+
+
+#Convert Home_Team_Time_Of_Possession_TOP to seconds
+Week6 <- separate(data=Week6, col = Home_Team_Time_Of_Possession_TOP, into = c("HTOP1", "HTOP2", "HTOP3"), sep =":")
+
+
+Week6 <- Week6 %>%
+  mutate(HTOP1 = as.numeric(HTOP1), HTOP2=as.numeric(HTOP2), HTOP3 = as.numeric(HTOP3), Home_Team_Time_Of_Possession_TOP = HTOP1*60 + HTOP2)%>%
+  select(-c(HTOP1, HTOP2, HTOP3))
+
+
+#Convert Away_Team_Time_Of_Possession_AvgTOP to seconds
+Week6 <- separate(data=Week6, col = Away_Team_Time_Of_Possession_AvgTOP, into = c("ATOP1", "ATOP2", "ATOP3"), sep =":")
+
+
+Week6 <- Week6 %>%
+  mutate(ATOP1 = as.numeric(ATOP1), ATOP2=as.numeric(ATOP2), ATOP3 = as.numeric(ATOP3), Away_Team_Time_Of_Possession_AvgTOP = ATOP1*60 + ATOP2)%>%
+  select(-c(ATOP1, ATOP2, ATOP3))
+
+#Convert Home_Team_Tiem_Of_Possession_AvgTOP to seconds
+Week6 <- separate(data=Week6, col = Home_Team_Time_Of_Possession_AvgTOP, into = c("ATOP1", "ATOP2", "ATOP3"), sep =":")
+
+
+Week6 <- Week6 %>%
+  mutate(ATOP1 = as.numeric(ATOP1), ATOP2=as.numeric(ATOP2), ATOP3 = as.numeric(ATOP3), Home_Team_Time_Of_Possession_AvgTOP = ATOP1*60 + ATOP2)%>%
+  select(-c(ATOP1, ATOP2, ATOP3))
+
+#Now, drop Home_Team, Away_Team, Away_Team_3rd_Down_Conversion_Pct_W-L, and Home_Team_3rd_Down_Conversion_Pct_W-L from the dataset:
+
+Week6 <- Week6 %>%
+  select(-c(Home_Team, Away_Team, `Away_Team_3rd_Down_Conversion_Pct_W-L`,
+            `Home_Team_3rd_Down_Conversion_Pct_W-L`))
+
+#Convert Winner to Factor Variable
+
+Week6 <- Week6 %>%
+  mutate(Winner = as.factor(Winner))
+
+#Drop redundant ...1 Column
+Week6 <- Week6 %>%
+  select(-(`...1`))
+
+
+
+```
+
+
+
+Make Random Forest Model to Predict Game Winner for Week 6
+```{r}
+ set.seed(1)
+ data_used = Week6
+ 
+ ctrl = trainControl(method= "cv", number=10)
+ Week6_rf_caret = train( Winner~.,
+              data = data_used,
+              method = "rf",
+              tuneGrid = expand.grid(mtry = c(18,19,20)),
+              trControl = ctrl)
+
+ Week6_rf_caret
+
+ 
+ Week6_rf_caret$finalModel
+ 
+ varImp(Week6_rf_caret)
+ 
+
+ 
+
+```
+
+
+
+#Week 7
+Modify Week 7 Dataset in Preparation for Analysis
+```{r}
+
+#Convert Away_Team_Time_Of_Possession_TOP to seconds
+Week7 <- separate(data=Week7, col = Away_Team_Time_Of_Possession_TOP, into = c("ATOP1", "ATOP2", "ATOP3"), sep =":")
+
+
+Week7 <- Week7 %>%
+  mutate(ATOP1 = as.numeric(ATOP1), ATOP2=as.numeric(ATOP2), ATOP3 = as.numeric(ATOP3), Away_Team_Time_Of_Possession_TOP = ATOP1*60 + ATOP2)%>%
+  select(-c(ATOP1, ATOP2, ATOP3))
+
+
+
+#Convert Home_Team_Time_Of_Possession_TOP to seconds
+Week7 <- separate(data=Week7, col = Home_Team_Time_Of_Possession_TOP, into = c("HTOP1", "HTOP2", "HTOP3"), sep =":")
+
+
+Week7 <- Week7 %>%
+  mutate(HTOP1 = as.numeric(HTOP1), HTOP2=as.numeric(HTOP2), HTOP3 = as.numeric(HTOP3), Home_Team_Time_Of_Possession_TOP = HTOP1*60 + HTOP2)%>%
+  select(-c(HTOP1, HTOP2, HTOP3))
+
+
+#Convert Away_Team_Time_Of_Possession_AvgTOP to seconds
+Week7 <- separate(data=Week7, col = Away_Team_Time_Of_Possession_AvgTOP, into = c("ATOP1", "ATOP2", "ATOP3"), sep =":")
+
+
+Week7 <- Week7 %>%
+  mutate(ATOP1 = as.numeric(ATOP1), ATOP2=as.numeric(ATOP2), ATOP3 = as.numeric(ATOP3), Away_Team_Time_Of_Possession_AvgTOP = ATOP1*60 + ATOP2)%>%
+  select(-c(ATOP1, ATOP2, ATOP3))
+
+#Convert Home_Team_Tiem_Of_Possession_AvgTOP to seconds
+Week7 <- separate(data=Week7, col = Home_Team_Time_Of_Possession_AvgTOP, into = c("ATOP1", "ATOP2", "ATOP3"), sep =":")
+
+
+Week7 <- Week7 %>%
+  mutate(ATOP1 = as.numeric(ATOP1), ATOP2=as.numeric(ATOP2), ATOP3 = as.numeric(ATOP3), Home_Team_Time_Of_Possession_AvgTOP = ATOP1*60 + ATOP2)%>%
+  select(-c(ATOP1, ATOP2, ATOP3))
+
+#Now, drop Home_Team, Away_Team, Away_Team_3rd_Down_Conversion_Pct_W-L, and Home_Team_3rd_Down_Conversion_Pct_W-L from the dataset:
+
+Week7 <- Week7 %>%
+  select(-c(Home_Team, Away_Team, `Away_Team_3rd_Down_Conversion_Pct_W-L`,
+            `Home_Team_3rd_Down_Conversion_Pct_W-L`))
+
+#Convert Winner to Factor Variable
+
+Week7 <- Week7 %>%
+  mutate(Winner = as.factor(Winner))
+
+#Drop redundant ...1 Column
+Week7 <- Week7 %>%
+  select(-(`...1`))
+
+
+
+```
+
+
+
+Make Random Forest Model to Predict Game Winner for Week 7
+```{r}
+ set.seed(1)
+ data_used = Week7
+ 
+ ctrl = trainControl(method= "cv", number=10)
+ Week7_rf_caret = train( Winner~.,
+              data = data_used,
+              method = "rf",
+              tuneGrid = expand.grid(mtry = c(18,19,20)),
+              trControl = ctrl)
+
+ Week7_rf_caret
+
+ 
+ Week7_rf_caret$finalModel
+ 
+ varImp(Week7_rf_caret)
+ 
+
+```
+
+
+#Week 8
+Modify Week 8 Dataset in Preparation for Analysis
+```{r}
+
+#Convert Away_Team_Time_Of_Possession_TOP to seconds
+Week8 <- separate(data=Week8, col = Away_Team_Time_Of_Possession_TOP, into = c("ATOP1", "ATOP2", "ATOP3"), sep =":")
+
+
+Week8 <- Week8 %>%
+  mutate(ATOP1 = as.numeric(ATOP1), ATOP2=as.numeric(ATOP2), ATOP3 = as.numeric(ATOP3), Away_Team_Time_Of_Possession_TOP = ATOP1*60 + ATOP2)%>%
+  select(-c(ATOP1, ATOP2, ATOP3))
+
+
+
+#Convert Home_Team_Time_Of_Possession_TOP to seconds
+Week8 <- separate(data=Week8, col = Home_Team_Time_Of_Possession_TOP, into = c("HTOP1", "HTOP2", "HTOP3"), sep =":")
+
+
+Week8 <- Week8 %>%
+  mutate(HTOP1 = as.numeric(HTOP1), HTOP2=as.numeric(HTOP2), HTOP3 = as.numeric(HTOP3), Home_Team_Time_Of_Possession_TOP = HTOP1*60 + HTOP2)%>%
+  select(-c(HTOP1, HTOP2, HTOP3))
+
+
+#Convert Away_Team_Time_Of_Possession_AvgTOP to seconds
+Week8 <- separate(data=Week8, col = Away_Team_Time_Of_Possession_AvgTOP, into = c("ATOP1", "ATOP2", "ATOP3"), sep =":")
+
+
+Week8 <- Week8 %>%
+  mutate(ATOP1 = as.numeric(ATOP1), ATOP2=as.numeric(ATOP2), ATOP3 = as.numeric(ATOP3), Away_Team_Time_Of_Possession_AvgTOP = ATOP1*60 + ATOP2)%>%
+  select(-c(ATOP1, ATOP2, ATOP3))
+
+#Convert Home_Team_Tiem_Of_Possession_AvgTOP to seconds
+Week8 <- separate(data=Week8, col = Home_Team_Time_Of_Possession_AvgTOP, into = c("ATOP1", "ATOP2", "ATOP3"), sep =":")
+
+
+Week8 <- Week8 %>%
+  mutate(ATOP1 = as.numeric(ATOP1), ATOP2=as.numeric(ATOP2), ATOP3 = as.numeric(ATOP3), Home_Team_Time_Of_Possession_AvgTOP = ATOP1*60 + ATOP2)%>%
+  select(-c(ATOP1, ATOP2, ATOP3))
+
+#Now, drop Home_Team, Away_Team, Away_Team_3rd_Down_Conversion_Pct_W-L, and Home_Team_3rd_Down_Conversion_Pct_W-L from the dataset:
+
+Week8 <- Week8 %>%
+  select(-c(Home_Team, Away_Team, `Away_Team_3rd_Down_Conversion_Pct_W-L`,
+            `Home_Team_3rd_Down_Conversion_Pct_W-L`))
+
+#Convert Winner to Factor Variable
+
+Week8 <- Week8 %>%
+  mutate(Winner = as.factor(Winner))
+
+#Drop redundant ...1 Column
+Week8 <- Week8 %>%
+  select(-(`...1`))
+
+
+
+```
+
+
+
+Make Random Forest Model to Predict Game Winner for Week 8
+```{r}
+ set.seed(1)
+ data_used = Week8
+ 
+ ctrl = trainControl(method= "cv", number=10)
+ Week8_rf_caret = train( Winner~.,
+              data = data_used,
+              method = "rf",
+              tuneGrid = expand.grid(mtry = c(18,19,20)),
+              trControl = ctrl)
+
+ Week8_rf_caret
+
+ 
+ Week8_rf_caret$finalModel
+ 
+ varImp(Week8_rf_caret)
+ 
+
+```
+
+
+
+#Week 9
+Modify Week 9 Dataset in Preparation for Analysis
+```{r}
+
+#Convert Away_Team_Time_Of_Possession_TOP to seconds
+Week9 <- separate(data=Week9, col = Away_Team_Time_Of_Possession_TOP, into = c("ATOP1", "ATOP2", "ATOP3"), sep =":")
+
+
+Week9 <- Week9 %>%
+  mutate(ATOP1 = as.numeric(ATOP1), ATOP2=as.numeric(ATOP2), ATOP3 = as.numeric(ATOP3), Away_Team_Time_Of_Possession_TOP = ATOP1*60 + ATOP2)%>%
+  select(-c(ATOP1, ATOP2, ATOP3))
+
+
+
+#Convert Home_Team_Time_Of_Possession_TOP to seconds
+Week9 <- separate(data=Week9, col = Home_Team_Time_Of_Possession_TOP, into = c("HTOP1", "HTOP2", "HTOP3"), sep =":")
+
+
+Week9 <- Week9 %>%
+  mutate(HTOP1 = as.numeric(HTOP1), HTOP2=as.numeric(HTOP2), HTOP3 = as.numeric(HTOP3), Home_Team_Time_Of_Possession_TOP = HTOP1*60 + HTOP2)%>%
+  select(-c(HTOP1, HTOP2, HTOP3))
+
+
+#Convert Away_Team_Time_Of_Possession_AvgTOP to seconds
+Week9 <- separate(data=Week9, col = Away_Team_Time_Of_Possession_AvgTOP, into = c("ATOP1", "ATOP2", "ATOP3"), sep =":")
+
+
+Week9 <- Week9 %>%
+  mutate(ATOP1 = as.numeric(ATOP1), ATOP2=as.numeric(ATOP2), ATOP3 = as.numeric(ATOP3), Away_Team_Time_Of_Possession_AvgTOP = ATOP1*60 + ATOP2)%>%
+  select(-c(ATOP1, ATOP2, ATOP3))
+
+#Convert Home_Team_Tiem_Of_Possession_AvgTOP to seconds
+Week9 <- separate(data=Week9, col = Home_Team_Time_Of_Possession_AvgTOP, into = c("ATOP1", "ATOP2", "ATOP3"), sep =":")
+
+
+Week9 <- Week9 %>%
+  mutate(ATOP1 = as.numeric(ATOP1), ATOP2=as.numeric(ATOP2), ATOP3 = as.numeric(ATOP3), Home_Team_Time_Of_Possession_AvgTOP = ATOP1*60 + ATOP2)%>%
+  select(-c(ATOP1, ATOP2, ATOP3))
+
+#Now, drop Home_Team, Away_Team, Away_Team_3rd_Down_Conversion_Pct_W-L, and Home_Team_3rd_Down_Conversion_Pct_W-L from the dataset:
+
+Week9 <- Week9 %>%
+  select(-c(Home_Team, Away_Team, `Away_Team_3rd_Down_Conversion_Pct_W-L`,
+            `Home_Team_3rd_Down_Conversion_Pct_W-L`))
+
+#Convert Winner to Factor Variable
+
+Week9 <- Week9 %>%
+  mutate(Winner = as.factor(Winner))
+
+#Drop redundant ...1 Column
+Week9 <- Week9 %>%
+  select(-(`...1`))
+
+
+
+```
+
+
+
+Make Random Forest Model to Predict Game Winner for Week 9
+```{r}
+ set.seed(1)
+ data_used = Week9
+ 
+ ctrl = trainControl(method= "cv", number=10)
+ Week9_rf_caret = train( Winner~.,
+              data = data_used,
+              method = "rf",
+              tuneGrid = expand.grid(mtry = c(18,19,20)),
+              trControl = ctrl)
+
+ Week9_rf_caret
+
+ 
+ Week9_rf_caret$finalModel
+ 
+ varImp(Week9_rf_caret)
+ 
+
+ 
+
+```
+
+
+
+#Week 10
+Modify Week 10 Dataset in Preparation for Analysis
+```{r}
+
+#Convert Away_Team_Time_Of_Possession_TOP to seconds
+Week10 <- separate(data=Week10, col = Away_Team_Time_Of_Possession_TOP, into = c("ATOP1", "ATOP2", "ATOP3"), sep =":")
+
+
+Week10 <- Week10 %>%
+  mutate(ATOP1 = as.numeric(ATOP1), ATOP2=as.numeric(ATOP2), ATOP3 = as.numeric(ATOP3), Away_Team_Time_Of_Possession_TOP = ATOP1*60 + ATOP2)%>%
+  select(-c(ATOP1, ATOP2, ATOP3))
+
+
+
+#Convert Home_Team_Time_Of_Possession_TOP to seconds
+Week10 <- separate(data=Week10, col = Home_Team_Time_Of_Possession_TOP, into = c("HTOP1", "HTOP2", "HTOP3"), sep =":")
+
+
+Week10 <- Week10 %>%
+  mutate(HTOP1 = as.numeric(HTOP1), HTOP2=as.numeric(HTOP2), HTOP3 = as.numeric(HTOP3), Home_Team_Time_Of_Possession_TOP = HTOP1*60 + HTOP2)%>%
+  select(-c(HTOP1, HTOP2, HTOP3))
+
+
+#Convert Away_Team_Time_Of_Possession_AvgTOP to seconds
+Week10 <- separate(data=Week10, col = Away_Team_Time_Of_Possession_AvgTOP, into = c("ATOP1", "ATOP2", "ATOP3"), sep =":")
+
+
+Week10 <- Week10 %>%
+  mutate(ATOP1 = as.numeric(ATOP1), ATOP2=as.numeric(ATOP2), ATOP3 = as.numeric(ATOP3), Away_Team_Time_Of_Possession_AvgTOP = ATOP1*60 + ATOP2)%>%
+  select(-c(ATOP1, ATOP2, ATOP3))
+
+#Convert Home_Team_Tiem_Of_Possession_AvgTOP to seconds
+Week10 <- separate(data=Week10, col = Home_Team_Time_Of_Possession_AvgTOP, into = c("ATOP1", "ATOP2", "ATOP3"), sep =":")
+
+
+Week10 <- Week10 %>%
+  mutate(ATOP1 = as.numeric(ATOP1), ATOP2=as.numeric(ATOP2), ATOP3 = as.numeric(ATOP3), Home_Team_Time_Of_Possession_AvgTOP = ATOP1*60 + ATOP2)%>%
+  select(-c(ATOP1, ATOP2, ATOP3))
+
+#Now, drop Home_Team, Away_Team, Away_Team_3rd_Down_Conversion_Pct_W-L, and Home_Team_3rd_Down_Conversion_Pct_W-L from the dataset:
+
+Week10 <- Week10 %>%
+  select(-c(Home_Team, Away_Team, `Away_Team_3rd_Down_Conversion_Pct_W-L`,
+            `Home_Team_3rd_Down_Conversion_Pct_W-L`))
+
+#Convert Winner to Factor Variable
+
+Week10 <- Week10 %>%
+  mutate(Winner = as.factor(Winner))
+
+#Drop redundant ...1 Column
+Week10 <- Week10 %>%
+  select(-(`...1`))
+
+
+
+```
+
+
+
+Make Random Forest Model to Predict Game Winner for Week 10
+```{r}
+ set.seed(1)
+ data_used = Week10
+ 
+ ctrl = trainControl(method= "cv", number=10)
+ Week10_rf_caret = train( Winner~.,
+              data = data_used,
+              method = "rf",
+              tuneGrid = expand.grid(mtry = c(18,19,20)),
+              trControl = ctrl)
+
+ Week10_rf_caret
+
+ 
+ Week10_rf_caret$finalModel
+ 
+ varImp(Week10_rf_caret)
+ 
+
+```
+
+
+
+#Week 11
+Modify Week 11 Dataset in Preparation for Analysis
+```{r}
+
+#Convert Away_Team_Time_Of_Possession_TOP to seconds
+Week11 <- separate(data=Week11, col = Away_Team_Time_Of_Possession_TOP, into = c("ATOP1", "ATOP2", "ATOP3"), sep =":")
+
+
+Week11 <- Week11 %>%
+  mutate(ATOP1 = as.numeric(ATOP1), ATOP2=as.numeric(ATOP2), ATOP3 = as.numeric(ATOP3), Away_Team_Time_Of_Possession_TOP = ATOP1*60 + ATOP2)%>%
+  select(-c(ATOP1, ATOP2, ATOP3))
+
+
+
+#Convert Home_Team_Time_Of_Possession_TOP to seconds
+Week11 <- separate(data=Week11, col = Home_Team_Time_Of_Possession_TOP, into = c("HTOP1", "HTOP2", "HTOP3"), sep =":")
+
+
+Week11 <- Week11 %>%
+  mutate(HTOP1 = as.numeric(HTOP1), HTOP2=as.numeric(HTOP2), HTOP3 = as.numeric(HTOP3), Home_Team_Time_Of_Possession_TOP = HTOP1*60 + HTOP2)%>%
+  select(-c(HTOP1, HTOP2, HTOP3))
+
+
+#Convert Away_Team_Time_Of_Possession_AvgTOP to seconds
+Week11 <- separate(data=Week11, col = Away_Team_Time_Of_Possession_AvgTOP, into = c("ATOP1", "ATOP2", "ATOP3"), sep =":")
+
+
+Week11 <- Week11 %>%
+  mutate(ATOP1 = as.numeric(ATOP1), ATOP2=as.numeric(ATOP2), ATOP3 = as.numeric(ATOP3), Away_Team_Time_Of_Possession_AvgTOP = ATOP1*60 + ATOP2)%>%
+  select(-c(ATOP1, ATOP2, ATOP3))
+
+#Convert Home_Team_Tiem_Of_Possession_AvgTOP to seconds
+Week11 <- separate(data=Week11, col = Home_Team_Time_Of_Possession_AvgTOP, into = c("ATOP1", "ATOP2", "ATOP3"), sep =":")
+
+
+Week11 <- Week11 %>%
+  mutate(ATOP1 = as.numeric(ATOP1), ATOP2=as.numeric(ATOP2), ATOP3 = as.numeric(ATOP3), Home_Team_Time_Of_Possession_AvgTOP = ATOP1*60 + ATOP2)%>%
+  select(-c(ATOP1, ATOP2, ATOP3))
+
+#Now, drop Home_Team, Away_Team, Away_Team_3rd_Down_Conversion_Pct_W-L, and Home_Team_3rd_Down_Conversion_Pct_W-L from the dataset:
+
+Week11 <- Week11 %>%
+  select(-c(Home_Team, Away_Team, `Away_Team_3rd_Down_Conversion_Pct_W-L`,
+            `Home_Team_3rd_Down_Conversion_Pct_W-L`))
+
+#Convert Winner to Factor Variable
+
+Week11 <- Week11 %>%
+  mutate(Winner = as.factor(Winner))
+
+#Drop redundant ...1 Column
+Week11 <- Week11 %>%
+  select(-(`...1`))
+
+
+
+```
+
+
+
+Make Random Forest Model to Predict Game Winner for Week 11
+```{r}
+ set.seed(1)
+ data_used = Week11
+ 
+ ctrl = trainControl(method= "cv", number=10)
+ Week11_rf_caret = train( Winner~.,
+              data = data_used,
+              method = "rf",
+              tuneGrid = expand.grid(mtry = c(18,19,20)),
+              trControl = ctrl)
+
+ Week11_rf_caret
+
+ 
+ Week11_rf_caret$finalModel
+ 
+ varImp(Week11_rf_caret)
+ 
+
+ 
+
+```
+
+
+
+#Week 12
+Modify Week 12 Dataset in Preparation for Analysis
+```{r}
+
+#Convert Away_Team_Time_Of_Possession_TOP to seconds
+Week12 <- separate(data=Week12, col = Away_Team_Time_Of_Possession_TOP, into = c("ATOP1", "ATOP2", "ATOP3"), sep =":")
+
+
+Week12 <- Week12 %>%
+  mutate(ATOP1 = as.numeric(ATOP1), ATOP2=as.numeric(ATOP2), ATOP3 = as.numeric(ATOP3), Away_Team_Time_Of_Possession_TOP = ATOP1*60 + ATOP2)%>%
+  select(-c(ATOP1, ATOP2, ATOP3))
+
+
+
+#Convert Home_Team_Time_Of_Possession_TOP to seconds
+Week12 <- separate(data=Week12, col = Home_Team_Time_Of_Possession_TOP, into = c("HTOP1", "HTOP2", "HTOP3"), sep =":")
+
+
+Week12 <- Week12 %>%
+  mutate(HTOP1 = as.numeric(HTOP1), HTOP2=as.numeric(HTOP2), HTOP3 = as.numeric(HTOP3), Home_Team_Time_Of_Possession_TOP = HTOP1*60 + HTOP2)%>%
+  select(-c(HTOP1, HTOP2, HTOP3))
+
+
+#Convert Away_Team_Time_Of_Possession_AvgTOP to seconds
+Week12 <- separate(data=Week12, col = Away_Team_Time_Of_Possession_AvgTOP, into = c("ATOP1", "ATOP2", "ATOP3"), sep =":")
+
+
+Week12 <- Week12 %>%
+  mutate(ATOP1 = as.numeric(ATOP1), ATOP2=as.numeric(ATOP2), ATOP3 = as.numeric(ATOP3), Away_Team_Time_Of_Possession_AvgTOP = ATOP1*60 + ATOP2)%>%
+  select(-c(ATOP1, ATOP2, ATOP3))
+
+#Convert Home_Team_Tiem_Of_Possession_AvgTOP to seconds
+Week12 <- separate(data=Week12, col = Home_Team_Time_Of_Possession_AvgTOP, into = c("ATOP1", "ATOP2", "ATOP3"), sep =":")
+
+
+Week12 <- Week12 %>%
+  mutate(ATOP1 = as.numeric(ATOP1), ATOP2=as.numeric(ATOP2), ATOP3 = as.numeric(ATOP3), Home_Team_Time_Of_Possession_AvgTOP = ATOP1*60 + ATOP2)%>%
+  select(-c(ATOP1, ATOP2, ATOP3))
+
+#Now, drop Home_Team, Away_Team, Away_Team_3rd_Down_Conversion_Pct_W-L, and Home_Team_3rd_Down_Conversion_Pct_W-L from the dataset:
+
+Week12 <- Week12 %>%
+  select(-c(Home_Team, Away_Team, `Away_Team_3rd_Down_Conversion_Pct_W-L`,
+            `Home_Team_3rd_Down_Conversion_Pct_W-L`))
+
+#Convert Winner to Factor Variable
+
+Week12 <- Week12 %>%
+  mutate(Winner = as.factor(Winner))
+
+#Drop redundant ...1 Column
+Week12 <- Week12 %>%
+  select(-(`...1`))
+
+
+
+```
+
+
+
+Make Random Forest Model to Predict Game Winner for Week 12
+```{r}
+ set.seed(1)
+ data_used = Week12
+ 
+ ctrl = trainControl(method= "cv", number=10)
+ Week12_rf_caret = train( Winner~.,
+              data = data_used,
+              method = "rf",
+              tuneGrid = expand.grid(mtry = c(18,19,20)),
+              trControl = ctrl)
+
+ Week12_rf_caret
+
+ 
+ Week12_rf_caret$finalModel
+ 
+ varImp(Week12_rf_caret)
+ 
+
+
+```
+
+
+#Week 13
+Modify Week 13 Dataset in Preparation for Analysis
+```{r}
+
+#Convert Away_Team_Time_Of_Possession_TOP to seconds
+Week13 <- separate(data=Week13, col = Away_Team_Time_Of_Possession_TOP, into = c("ATOP1", "ATOP2", "ATOP3"), sep =":")
+
+
+Week13 <- Week13 %>%
+  mutate(ATOP1 = as.numeric(ATOP1), ATOP2=as.numeric(ATOP2), ATOP3 = as.numeric(ATOP3), Away_Team_Time_Of_Possession_TOP = ATOP1*60 + ATOP2)%>%
+  select(-c(ATOP1, ATOP2, ATOP3))
+
+
+
+#Convert Home_Team_Time_Of_Possession_TOP to seconds
+Week13 <- separate(data=Week13, col = Home_Team_Time_Of_Possession_TOP, into = c("HTOP1", "HTOP2", "HTOP3"), sep =":")
+
+
+Week13 <- Week13 %>%
+  mutate(HTOP1 = as.numeric(HTOP1), HTOP2=as.numeric(HTOP2), HTOP3 = as.numeric(HTOP3), Home_Team_Time_Of_Possession_TOP = HTOP1*60 + HTOP2)%>%
+  select(-c(HTOP1, HTOP2, HTOP3))
+
+
+#Convert Away_Team_Time_Of_Possession_AvgTOP to seconds
+Week13 <- separate(data=Week13, col = Away_Team_Time_Of_Possession_AvgTOP, into = c("ATOP1", "ATOP2", "ATOP3"), sep =":")
+
+
+Week13 <- Week13 %>%
+  mutate(ATOP1 = as.numeric(ATOP1), ATOP2=as.numeric(ATOP2), ATOP3 = as.numeric(ATOP3), Away_Team_Time_Of_Possession_AvgTOP = ATOP1*60 + ATOP2)%>%
+  select(-c(ATOP1, ATOP2, ATOP3))
+
+#Convert Home_Team_Tiem_Of_Possession_AvgTOP to seconds
+Week13 <- separate(data=Week13, col = Home_Team_Time_Of_Possession_AvgTOP, into = c("ATOP1", "ATOP2", "ATOP3"), sep =":")
+
+
+Week13 <- Week13 %>%
+  mutate(ATOP1 = as.numeric(ATOP1), ATOP2=as.numeric(ATOP2), ATOP3 = as.numeric(ATOP3), Home_Team_Time_Of_Possession_AvgTOP = ATOP1*60 + ATOP2)%>%
+  select(-c(ATOP1, ATOP2, ATOP3))
+
+#Now, drop Home_Team, Away_Team, Away_Team_3rd_Down_Conversion_Pct_W-L, and Home_Team_3rd_Down_Conversion_Pct_W-L from the dataset:
+
+Week13 <- Week13 %>%
+  select(-c(Home_Team, Away_Team, `Away_Team_3rd_Down_Conversion_Pct_W-L`,
+            `Home_Team_3rd_Down_Conversion_Pct_W-L`))
+
+#Convert Winner to Factor Variable
+
+Week13 <- Week13 %>%
+  mutate(Winner = as.factor(Winner))
+
+#Drop redundant ...1 Column
+Week13 <- Week13 %>%
+  select(-(`...1`))
+
+
+
+```
+
+
+
+Make Random Forest Model to Predict Game Winner for Week 13
+```{r}
+ set.seed(1)
+ data_used = Week13
+ 
+ ctrl = trainControl(method= "cv", number=10)
+ Week13_rf_caret = train( Winner~.,
+              data = data_used,
+              method = "rf",
+              tuneGrid = expand.grid(mtry = c(18,19,20)),
+              trControl = ctrl)
+
+ Week13_rf_caret
+
+ 
+ Week13_rf_caret$finalModel
+ 
+ varImp(Week13_rf_caret)
+ 
+
+```
+
+
+#Bowls 1
+Modify Bowls 1 Dataset in Preparation for Analysis
+```{r}
+
+#Convert Away_Team_Time_Of_Possession_TOP to seconds
+Bowls1 <- separate(data=Bowls1, col = Away_Team_Time_Of_Possession_TOP, into = c("ATOP1", "ATOP2", "ATOP3"), sep =":")
+
+
+Bowls1 <- Bowls1 %>%
+  mutate(ATOP1 = as.numeric(ATOP1), ATOP2=as.numeric(ATOP2), ATOP3 = as.numeric(ATOP3), Away_Team_Time_Of_Possession_TOP = ATOP1*60 + ATOP2)%>%
+  select(-c(ATOP1, ATOP2, ATOP3))
+
+
+
+#Convert Home_Team_Time_Of_Possession_TOP to seconds
+Bowls1 <- separate(data=Bowls1, col = Home_Team_Time_Of_Possession_TOP, into = c("HTOP1", "HTOP2", "HTOP3"), sep =":")
+
+
+Bowls1 <- Bowls1 %>%
+  mutate(HTOP1 = as.numeric(HTOP1), HTOP2=as.numeric(HTOP2), HTOP3 = as.numeric(HTOP3), Home_Team_Time_Of_Possession_TOP = HTOP1*60 + HTOP2)%>%
+  select(-c(HTOP1, HTOP2, HTOP3))
+
+
+#Convert Away_Team_Time_Of_Possession_AvgTOP to seconds
+Bowls1 <- separate(data=Bowls1, col = Away_Team_Time_Of_Possession_AvgTOP, into = c("ATOP1", "ATOP2", "ATOP3"), sep =":")
+
+
+Bowls1 <- Bowls1 %>%
+  mutate(ATOP1 = as.numeric(ATOP1), ATOP2=as.numeric(ATOP2), ATOP3 = as.numeric(ATOP3), Away_Team_Time_Of_Possession_AvgTOP = ATOP1*60 + ATOP2)%>%
+  select(-c(ATOP1, ATOP2, ATOP3))
+
+#Convert Home_Team_Tiem_Of_Possession_AvgTOP to seconds
+Bowls1 <- separate(data=Bowls1, col = Home_Team_Time_Of_Possession_AvgTOP, into = c("ATOP1", "ATOP2", "ATOP3"), sep =":")
+
+
+Bowls1 <- Bowls1 %>%
+  mutate(ATOP1 = as.numeric(ATOP1), ATOP2=as.numeric(ATOP2), ATOP3 = as.numeric(ATOP3), Home_Team_Time_Of_Possession_AvgTOP = ATOP1*60 + ATOP2)%>%
+  select(-c(ATOP1, ATOP2, ATOP3))
+
+#Now, drop Home_Team, Away_Team, Away_Team_3rd_Down_Conversion_Pct_W-L, and Home_Team_3rd_Down_Conversion_Pct_W-L from the dataset:
+
+Bowls1 <- Bowls1 %>%
+  select(-c(Home_Team, Away_Team, `Away_Team_3rd_Down_Conversion_Pct_W-L`,
+            `Home_Team_3rd_Down_Conversion_Pct_W-L`))
+
+#Convert Winner to Factor Variable
+
+Bowls1 <- Bowls1 %>%
+  mutate(Winner = as.factor(Winner))
+
+#Drop redundant ...1 Column
+Bowls1 <- Bowls1 %>%
+  select(-(`...1`))
+
+
+
+```
+
+
+
+Make Random Forest Model to Predict Game Winner for Bowls 1
+```{r}
+ set.seed(1)
+ data_used = Bowls1
+ 
+ ctrl = trainControl(method= "cv", number=10)
+ Bowls1_rf_caret = train( Winner~.,
+              data = data_used,
+              method = "rf",
+              tuneGrid = expand.grid(mtry = c(18,19,20)),
+              trControl = ctrl)
+
+ Bowls1_rf_caret
+
+ 
+ Bowls1_rf_caret$finalModel
+ 
+ varImp(Bowls1_rf_caret)
+ 
+
+```
+
+
+
+#Bowls 2
+Modify Bowls 2 Dataset in Preparation for Analysis
+```{r}
+
+#Convert Away_Team_Time_Of_Possession_TOP to seconds
+Bowls2 <- separate(data=Bowls2, col = Away_Team_Time_Of_Possession_TOP, into = c("ATOP1", "ATOP2", "ATOP3"), sep =":")
+
+
+Bowls2 <- Bowls2 %>%
+  mutate(ATOP1 = as.numeric(ATOP1), ATOP2=as.numeric(ATOP2), ATOP3 = as.numeric(ATOP3), Away_Team_Time_Of_Possession_TOP = ATOP1*60 + ATOP2)%>%
+  select(-c(ATOP1, ATOP2, ATOP3))
+
+
+
+#Convert Home_Team_Time_Of_Possession_TOP to seconds
+Bowls2 <- separate(data=Bowls2, col = Home_Team_Time_Of_Possession_TOP, into = c("HTOP1", "HTOP2", "HTOP3"), sep =":")
+
+
+Bowls2 <- Bowls2 %>%
+  mutate(HTOP1 = as.numeric(HTOP1), HTOP2=as.numeric(HTOP2), HTOP3 = as.numeric(HTOP3), Home_Team_Time_Of_Possession_TOP = HTOP1*60 + HTOP2)%>%
+  select(-c(HTOP1, HTOP2, HTOP3))
+
+
+#Convert Away_Team_Time_Of_Possession_AvgTOP to seconds
+Bowls2 <- separate(data=Bowls2, col = Away_Team_Time_Of_Possession_AvgTOP, into = c("ATOP1", "ATOP2", "ATOP3"), sep =":")
+
+
+Bowls2 <- Bowls2 %>%
+  mutate(ATOP1 = as.numeric(ATOP1), ATOP2=as.numeric(ATOP2), ATOP3 = as.numeric(ATOP3), Away_Team_Time_Of_Possession_AvgTOP = ATOP1*60 + ATOP2)%>%
+  select(-c(ATOP1, ATOP2, ATOP3))
+
+#Convert Home_Team_Tiem_Of_Possession_AvgTOP to seconds
+Bowls2 <- separate(data=Bowls2, col = Home_Team_Time_Of_Possession_AvgTOP, into = c("ATOP1", "ATOP2", "ATOP3"), sep =":")
+
+
+Bowls2 <- Bowls2 %>%
+  mutate(ATOP1 = as.numeric(ATOP1), ATOP2=as.numeric(ATOP2), ATOP3 = as.numeric(ATOP3), Home_Team_Time_Of_Possession_AvgTOP = ATOP1*60 + ATOP2)%>%
+  select(-c(ATOP1, ATOP2, ATOP3))
+
+#Now, drop Home_Team, Away_Team, Away_Team_3rd_Down_Conversion_Pct_W-L, and Home_Team_3rd_Down_Conversion_Pct_W-L from the dataset:
+
+Bowls2 <- Bowls2 %>%
+  select(-c(Home_Team, Away_Team, `Away_Team_3rd_Down_Conversion_Pct_W-L`,
+            `Home_Team_3rd_Down_Conversion_Pct_W-L`))
+
+#Convert Winner to Factor Variable
+
+Bowls2 <- Bowls2 %>%
+  mutate(Winner = as.factor(Winner))
+
+#Drop redundant ...1 Column
+Bowls2 <- Bowls2 %>%
+  select(-(`...1`))
+
+
+
+```
+
+
+
+Make Random Forest Model to Predict Game Winner for Bowls 2
+```{r}
+ set.seed(1)
+ data_used = Bowls2
+ 
+ ctrl = trainControl(method= "cv", number=10)
+ Bowls2_rf_caret = train( Winner~.,
+              data = data_used,
+              method = "rf",
+              tuneGrid = expand.grid(mtry = c(18,19,20)),
+              trControl = ctrl)
+
+ Bowls2_rf_caret
+
+ 
+ Bowls2_rf_caret$finalModel
+ 
+ varImp(Bowls2_rf_caret)
+ 
+
+```
+
+
+
+
+#Combined Dataset
+Modify Combined Dataset for Analysis Purposes
+```{r}
+#Convert Away_Team_Time_Of_Possession_TOP to seconds
+Combined <- separate(data=Combined, col = Away_Team_Time_Of_Possession_TOP, into = c("ATOP1", "ATOP2", "ATOP3"), sep =":")
+
+
+Combined <- Combined %>%
+  mutate(ATOP1 = as.numeric(ATOP1), ATOP2=as.numeric(ATOP2), ATOP3 = as.numeric(ATOP3), Away_Team_Time_Of_Possession_TOP = ATOP1*60 + ATOP2)%>%
+  select(-c(ATOP1, ATOP2, ATOP3))
+
+
+
+#Convert Home_Team_Time_Of_Possession_TOP to seconds
+Combined <- separate(data=Combined, col = Home_Team_Time_Of_Possession_TOP, into = c("HTOP1", "HTOP2", "HTOP3"), sep =":")
+
+
+Combined <- Combined %>%
+  mutate(HTOP1 = as.numeric(HTOP1), HTOP2=as.numeric(HTOP2), HTOP3 = as.numeric(HTOP3), Home_Team_Time_Of_Possession_TOP = HTOP1*60 + HTOP2)%>%
+  select(-c(HTOP1, HTOP2, HTOP3))
+
+
+#Convert Away_Team_Time_Of_Possession_AvgTOP to seconds
+Combined <- separate(data=Combined, col = Away_Team_Time_Of_Possession_AvgTOP, into = c("ATOP1", "ATOP2", "ATOP3"), sep =":")
+
+
+Combined <- Combined %>%
+  mutate(ATOP1 = as.numeric(ATOP1), ATOP2=as.numeric(ATOP2), ATOP3 = as.numeric(ATOP3), Away_Team_Time_Of_Possession_AvgTOP = ATOP1*60 + ATOP2)%>%
+  select(-c(ATOP1, ATOP2, ATOP3))
+
+#Convert Home_Team_Tiem_Of_Possession_AvgTOP to seconds
+Combined <- separate(data=Combined, col = Home_Team_Time_Of_Possession_AvgTOP, into = c("ATOP1", "ATOP2", "ATOP3"), sep =":")
+
+
+Combined <- Combined %>%
+  mutate(ATOP1 = as.numeric(ATOP1), ATOP2=as.numeric(ATOP2), ATOP3 = as.numeric(ATOP3), Home_Team_Time_Of_Possession_AvgTOP = ATOP1*60 + ATOP2)%>%
+  select(-c(ATOP1, ATOP2, ATOP3))
+
+#Now, drop Home_Team, Away_Team, Away_Team_3rd_Down_Conversion_Pct_W-L, and Home_Team_3rd_Down_Conversion_Pct_W-L from the dataset:
+
+Combined <- Combined %>%
+  select(-c(Home_Team, Away_Team, `Away_Team_3rd_Down_Conversion_Pct_W-L`,
+            `Home_Team_3rd_Down_Conversion_Pct_W-L`))
+
+#Convert Winner to Factor Variable
+
+Combined <- Combined %>%
+  mutate(Winner = as.factor(Winner))
+
+#Get rid of redundant ...1 column:
+Combined <- Combined %>%
+  select(-...1)
+
+
+```
+
+
+
+Make Random Forest Model to Predict Game Winner for Combined Dataset
+```{r}
+ set.seed(1)
+ Combined_index <- createDataPartition(Combined$Winner, p=.8, list=FALSE)
+ Combined_train <- Combined[Combined_index,]
+ Combined_test <- Combined[-Combined_index,]
+
+
+ data_used = Combined_train
+ 
+
+ 
+ 
+ ctrl = trainControl(method= "cv", number=10)
+ Combined_rf_caret = train( Winner~.,
+              data = data_used,
+              method = "rf",
+              tuneGrid = expand.grid(mtry = c(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20)),
+              trControl = ctrl)
+ 
+ 
+Combined_rf_caret
+
+ 
+Combined_rf_caret$finalModel
+ 
+ 
+ #Use model on test set and get accuracy measures
+ 
+ Combined_preds <- predict(Combined_rf_caret, newdata=Combined_test)
+ conf_mat<-confusionMatrix(Combined_preds, Combined_test$Winner, positive = "1")
+
+conf_mat
+
+comb_var_imp <- varImp(Combined_rf_caret)
+comb_var_imp
+```
+
+
+
+
